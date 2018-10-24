@@ -8,6 +8,7 @@ addons:
   apt:
     packages:
       - libboost-all-dev
+      - libasio-dev
 
 compiler:
   - gcc
