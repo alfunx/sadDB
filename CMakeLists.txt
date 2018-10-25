@@ -2,6 +2,10 @@ cmake_minimum_required(VERSION 3.0.0)
 project(sadDB)
 set(CMAKE_CXX_STANDARD 17)
 
+# Debug
+set(CMAKE_BUILD_TYPE Debug)
+#set(Boost_DEBUG ON)
+
 # Boost
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
