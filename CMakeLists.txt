@@ -6,23 +6,50 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_BUILD_TYPE Debug)
 #set(Boost_DEBUG ON)
 
+# Packages
+find_package(
+    Threads
+)
+
 # Boost
 set(Boost_USE_STATIC_LIBS ON)
 find_package(Boost
     REQUIRED
-    COMPONENTS serialization
+    COMPONENTS
+        serialization
+        system
+        thread
 )
 
+# Executables
+set(sadDB_server "sadDB")
+set(sadDB_client "sadDB_client")
+
+# Server
 file(GLOB sadDB_SRC
-    "src/*.h"
     "src/*.cpp"
+    "src/*.h"
+)
+add_executable(${sadDB_server}
+    ${sadDB_SRC}
+)
+target_link_libraries(${sadDB_server}
+    ${Boost_SYSTEM_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
 )
 
-add_executable(${PROJECT_NAME} ${sadDB_SRC})
-
+# Client
 file(GLOB sadDB_client_SRC
-    "client_src/*.h"
     "client_src/*.cpp"
+    "client_src/*.h"
+    "src/*.h"
 )
-
-add_executable(${PROJECT_NAME}_client ${sadDB_client_SRC})
+add_executable(${sadDB_client}
+    ${sadDB_client_SRC}
+)
+target_link_libraries(${sadDB_client}
+    ${Boost_SYSTEM_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+)
