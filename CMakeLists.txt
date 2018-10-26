@@ -51,6 +51,40 @@ target_link_libraries(${sadDB_client}
     ${CMAKE_THREAD_LIBS_INIT}
 )
 
+# Test TCP Server
+file(GLOB sadDB_SRC_tcp-server
+    "test/tcp_server.cpp"
+    "src/*.cpp"
+)
+list(FILTER sadDB_SRC_tcp-server EXCLUDE REGEX
+    "src/main.cpp$"
+)
+add_executable(tcp-server
+    ${sadDB_SRC_tcp-server}
+)
+target_link_libraries(tcp-server
+    ${Boost_SYSTEM_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
+# Test TCP Client
+file(GLOB sadDB_SRC_tcp-client
+    "test/tcp_client.cpp"
+    "src/*.cpp"
+)
+list(FILTER sadDB_SRC_tcp-client EXCLUDE REGEX
+    "src/main.cpp$"
+)
+add_executable(tcp-client
+    ${sadDB_SRC_tcp-client}
+)
+target_link_libraries(tcp-client
+    ${Boost_SYSTEM_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
 # Headers
 include_directories(
     "src"
