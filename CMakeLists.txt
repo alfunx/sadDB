@@ -28,7 +28,6 @@ set(sadDB_client "sadDB_client")
 # Server
 file(GLOB sadDB_SRC
     "src/*.cpp"
-    "src/*.h"
 )
 add_executable(${sadDB_server}
     ${sadDB_SRC}
@@ -42,8 +41,6 @@ target_link_libraries(${sadDB_server}
 # Client
 file(GLOB sadDB_client_SRC
     "client_src/*.cpp"
-    "client_src/*.h"
-    "src/*.h"
 )
 add_executable(${sadDB_client}
     ${sadDB_client_SRC}
@@ -52,4 +49,10 @@ target_link_libraries(${sadDB_client}
     ${Boost_SYSTEM_LIBRARIES}
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}
+)
+
+# Headers
+include_directories(
+    "src"
+    "client_src"
 )
