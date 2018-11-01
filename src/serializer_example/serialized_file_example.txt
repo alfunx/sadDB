@@ -1,0 +1,15 @@
+22 (length of the signature)
+serialization::archive (signature)
+17 (archive version, 10 on boost 1.53)
+0
+0
+6 (number of elements)
+0
+0
+0
+1 (key) 4 (value length) blob (value)
+1 13 lsflkjslfjlks
+2 4 blub
+3 4 bleb
+5 3 hit
+6 2 so
