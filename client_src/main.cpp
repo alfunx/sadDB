@@ -9,7 +9,7 @@
 
 void start_phase(int phase_num) {
     std::string localhost = "0.0.0.0";
-    std::string nodes[] = {"8081", "8082"};//, "8083"};
+    std::string nodes[] = {"8081", "8082", "8083"};
     for (const auto &node : nodes) {
         try {
             Client<int> client(phase_num, localhost, node);
@@ -30,7 +30,7 @@ void await_end(int phase_num) {
         Server<int> server(port);
 
         // define exit condition (counter)
-        server.set_exit_condition(2);
+        server.set_exit_condition(3);
 
         // start tcp server
         server.start();

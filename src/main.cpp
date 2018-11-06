@@ -8,7 +8,7 @@
 
 void phase(int num) {
     // To lower the possibility of connection refused
-    usleep(rand() % 10);
+    usleep(rand() % 100 + 5000);
     std::cout << ".\n.\n.\nPhase " << num << " ends." << std::endl;
     std::string localhost = "0.0.0.0";
     std::string client_node_server = "8080";
