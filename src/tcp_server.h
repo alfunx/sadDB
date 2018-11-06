@@ -1,6 +1,7 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -24,6 +25,8 @@ class Server
 
 	typedef std::vector<T> C;
 	C* collection;
+
+	std::function<bool()> exit_condition = []() { return false; };
 
 public:
 
@@ -53,6 +56,11 @@ public:
 		ios.stop();
 	}
 
+	void set_exit_condition(std::function<bool()> exit_condition)
+	{
+		Server::exit_condition = exit_condition;
+	}
+
 	C* get_collection()
 	{
 		return collection;
@@ -69,6 +77,9 @@ private:
 			conn->async_read(*t,
 					boost::bind(&Server::handle_read, this, boost::asio::placeholders::error, conn, t));
 		}
+
+		if (exit_condition())
+			return;
 
 		// start an accept operation for a new connection
 		ConnectionPtr new_conn(new Connection(acceptor.get_io_service()));
