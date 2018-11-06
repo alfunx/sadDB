@@ -25,6 +25,8 @@ class Server
 	typedef std::vector<T> C;
 	C* collection;
 
+	int counter = -1;
+
 public:
 
 	Server(unsigned short port) :
@@ -53,6 +55,13 @@ public:
 		ios.stop();
 	}
 
+	/// cannot be set to zero
+	void set_exit_condition(int counter)
+	{
+		assert(counter > 0);
+		this->counter = counter;
+	}
+
 	C* get_collection()
 	{
 		return collection;
@@ -69,6 +78,9 @@ private:
 			conn->async_read(*t,
 					boost::bind(&Server::handle_read, this, boost::asio::placeholders::error, conn, t));
 		}
+
+		if (counter > 0 && --counter == 0)
+			return;
 
 		// start an accept operation for a new connection
 		ConnectionPtr new_conn(new Connection(acceptor.get_io_service()));
