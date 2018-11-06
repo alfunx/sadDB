@@ -18,12 +18,13 @@ class Client
 
 private:
 
+	io_service ios;
 	Connection conn;
 	T& object;
 
 public:
 
-	Client(T& object, io_service& ios, const std::string& host, const std::string& service) :
+	Client(T& object, const std::string& host, const std::string& service) :
 		conn(ios),
 		object(object)
 	{
@@ -37,6 +38,18 @@ public:
 				endpoint_iterator,
 				boost::bind(&Client::handle_connect, this, boost::asio::placeholders::error));
 	}
+
+	void start()
+	{
+		ios.run();
+	}
+
+	void stop()
+	{
+		ios.stop();
+	}
+
+private:
 
 	/// handle completion of a connect operation
 	void handle_connect(const boost::system::error_code& e)

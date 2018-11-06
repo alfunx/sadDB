@@ -19,14 +19,17 @@ template <typename T>
 class Server
 {
 
-	io_service& ios;
+	io_service ios;
 	tcp::acceptor acceptor;
-	std::vector<T>* collection;
+
+	typedef std::vector<T> C;
+	C* collection;
+
+	int counter = -1;
 
 public:
 
-	Server(io_service& ios, unsigned short port) :
-		ios(ios),
+	Server(unsigned short port) :
 		acceptor(ios, tcp::endpoint(tcp::v4(), port))
 	{
 		collection = new std::vector<T>();
@@ -42,6 +45,30 @@ public:
 		delete collection;
 	}
 
+	void start()
+	{
+		ios.run();
+	}
+
+	void stop()
+	{
+		ios.stop();
+	}
+
+	/// cannot be set to zero
+	void set_exit_condition(int counter)
+	{
+		assert(counter > 0);
+		this->counter = counter;
+	}
+
+	C* get_collection()
+	{
+		return collection;
+	}
+
+private:
+
 	void handle_accept(const boost::system::error_code& e, ConnectionPtr conn)
 	{
 		if (!e)
@@ -51,6 +78,9 @@ public:
 			conn->async_read(*t,
 					boost::bind(&Server::handle_read, this, boost::asio::placeholders::error, conn, t));
 		}
+
+		if (counter > 0 && --counter == 0)
+			return;
 
 		// start an accept operation for a new connection
 		ConnectionPtr new_conn(new Connection(acceptor.get_io_service()));
@@ -69,11 +99,6 @@ public:
 		{
 			std::cerr << e.message() << std::endl;
 		}
-	}
-
-	T* get_collection()
-	{
-		return collection;
 	}
 
 };
