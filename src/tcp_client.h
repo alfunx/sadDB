@@ -38,6 +38,8 @@ public:
 				boost::bind(&Client::handle_connect, this, boost::asio::placeholders::error));
 	}
 
+private:
+
 	/// handle completion of a connect operation
 	void handle_connect(const boost::system::error_code& e)
 	{

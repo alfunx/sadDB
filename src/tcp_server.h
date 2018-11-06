@@ -21,7 +21,9 @@ class Server
 
 	io_service& ios;
 	tcp::acceptor acceptor;
-	std::vector<T>* collection;
+
+	typedef std::vector<T> C;
+	C* collection;
 
 public:
 
@@ -41,6 +43,13 @@ public:
 	{
 		delete collection;
 	}
+
+	C* get_collection()
+	{
+		return collection;
+	}
+
+private:
 
 	void handle_accept(const boost::system::error_code& e, ConnectionPtr conn)
 	{
@@ -69,11 +78,6 @@ public:
 		{
 			std::cerr << e.message() << std::endl;
 		}
-	}
-
-	T* get_collection()
-	{
-		return collection;
 	}
 
 };
