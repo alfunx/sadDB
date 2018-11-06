@@ -19,7 +19,7 @@ template <typename T>
 class Server
 {
 
-	io_service& ios;
+	io_service ios;
 	tcp::acceptor acceptor;
 
 	typedef std::vector<T> C;
@@ -27,8 +27,7 @@ class Server
 
 public:
 
-	Server(io_service& ios, unsigned short port) :
-		ios(ios),
+	Server(unsigned short port) :
 		acceptor(ios, tcp::endpoint(tcp::v4(), port))
 	{
 		collection = new std::vector<T>();
@@ -42,6 +41,16 @@ public:
 	~Server()
 	{
 		delete collection;
+	}
+
+	void start()
+	{
+		ios.run();
+	}
+
+	void stop()
+	{
+		ios.stop();
 	}
 
 	C* get_collection()
