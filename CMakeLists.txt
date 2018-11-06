@@ -55,4 +55,5 @@ target_link_libraries(${sadDB_client}
 include_directories(
     "src"
     "client_src"
+    ${Boost_INCLUDE_DIR}
 )
