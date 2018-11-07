@@ -1,6 +1,7 @@
 #ifndef SERVER_H_
 #define SERVER_H_
 
+#include <functional>
 #include <iostream>
 #include <memory>
 #include <vector>
@@ -8,6 +9,7 @@
 #include <boost/asio.hpp>
 #include <boost/asio/io_service.hpp>
 #include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/thread.hpp>
 #include "connection.h" // must come before boost/serialization headers
 #include <boost/serialization/vector.hpp>
@@ -22,17 +24,18 @@ class Server
 	io_service ios;
 	tcp::acceptor acceptor;
 
-	typedef std::vector<T> C;
-	C* collection;
+	std::function<void(boost::shared_ptr<T>, ConnectionPtr)> handle_object =
+		[](boost::shared_ptr<T> t, ConnectionPtr) { return; };
 
 	int counter = -1;
 
 public:
 
-	Server(unsigned short port) :
+	Server(unsigned short port, std::function<void(boost::shared_ptr<T>, ConnectionPtr)> f) :
 		acceptor(ios, tcp::endpoint(tcp::v4(), port))
 	{
-		collection = new std::vector<T>();
+		// hanle an incoming object
+		this->handle_object = f;
 
 		// start an accept operation for a new connection
 		ConnectionPtr new_conn(new Connection(acceptor.get_io_service()));
@@ -42,7 +45,7 @@ public:
 
 	~Server()
 	{
-		delete collection;
+		/* void */
 	}
 
 	void start()
@@ -55,16 +58,11 @@ public:
 		ios.stop();
 	}
 
-	/// cannot be set to zero
-	void set_exit_condition(int counter)
+	/// must be greater than zero
+	void expected_quantity(int counter)
 	{
 		assert(counter > 0);
 		this->counter = counter;
-	}
-
-	C* get_collection()
-	{
-		return collection;
 	}
 
 private:
@@ -93,7 +91,7 @@ private:
 	{
 		if (!e)
 		{
-			collection->push_back(*t);
+			handle_object(t, conn);
 		}
 		else
 		{
