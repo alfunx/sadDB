@@ -1,5 +1,5 @@
-#ifndef SERVER_H_
-#define SERVER_H_
+#ifndef SADDB_TCP_SERVER_H_
+#define SADDB_TCP_SERVER_H_
 
 #include <functional>
 #include <iostream>
@@ -18,7 +18,7 @@ using boost::asio::io_service;
 using boost::asio::ip::tcp;
 
 template <typename T>
-class Server
+class TCP_Server
 {
 
 	io_service ios;
@@ -31,7 +31,7 @@ class Server
 
 public:
 
-	Server(unsigned short port, std::function<void(boost::shared_ptr<T>, ConnectionPtr)> f) :
+	TCP_Server(unsigned short port, std::function<void(boost::shared_ptr<T>, ConnectionPtr)> f) :
 		acceptor(ios, tcp::endpoint(tcp::v4(), port))
 	{
 		// hanle an incoming object
@@ -40,10 +40,10 @@ public:
 		// start an accept operation for a new connection
 		ConnectionPtr new_conn(new Connection(acceptor.get_io_service()));
 		acceptor.async_accept(new_conn->socket(),
-				boost::bind(&Server::handle_accept, this, boost::asio::placeholders::error, new_conn));
+				boost::bind(&TCP_Server::handle_accept, this, boost::asio::placeholders::error, new_conn));
 	}
 
-	~Server()
+	~TCP_Server()
 	{
 		/* void */
 	}
@@ -74,7 +74,7 @@ private:
 			// successfully established connection, start reading
 			boost::shared_ptr<T> t(new T());
 			conn->async_read(*t,
-					boost::bind(&Server::handle_read, this, boost::asio::placeholders::error, conn, t));
+					boost::bind(&TCP_Server::handle_read, this, boost::asio::placeholders::error, conn, t));
 		}
 
 		if (counter > 0 && --counter == 0)
@@ -83,7 +83,7 @@ private:
 		// start an accept operation for a new connection
 		ConnectionPtr new_conn(new Connection(acceptor.get_io_service()));
 		acceptor.async_accept(new_conn->socket(),
-				boost::bind(&Server::handle_accept, this, boost::asio::placeholders::error, new_conn));
+				boost::bind(&TCP_Server::handle_accept, this, boost::asio::placeholders::error, new_conn));
 	}
 
 	/// handle completion of a read operation
@@ -101,4 +101,4 @@ private:
 
 };
 
-#endif  // SERVER_H_
+#endif  // SADDB_TCP_SERVER_H_
