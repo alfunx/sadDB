@@ -22,6 +22,8 @@ public:
 
 	void phase3();
 
+	int broadcast(std::vector<std::pair<Address, int> > &r, std::vector<std::pair<Address, int> > &s);
+
 };
 
 #endif //SADDB_MASTER_H
