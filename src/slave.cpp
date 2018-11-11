@@ -23,11 +23,10 @@ void print(std::multimap<int, std::string> &m)
 }
 
 
-Slave::Slave(Node node, relation_type t, std::string e, std::string n) :
+Slave::Slave(Node node, relation_type t, std::string e) :
 	node_(node),
 	type(t),
-	experiment(e),
-	node_nr(n)
+	experiment(e)
 {
 	/* void */
 }
@@ -36,7 +35,7 @@ void Slave::phase1() {
     // Fill a multimap with relation data (either R or S)
     std::string r_file = "../relations/";
     r_file.append(experiment);
-    r_file.append("/").append(node_nr);
+    r_file.append("/").append(std::to_string(node_.id()));
 
     // We should fill two strings after run program with
     // the correct path and name for the chosen experiment

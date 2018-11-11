@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
 
 	// initialize master and slaves
 	Master m(node);
-	Slave s1(node, R, database, "");
-	Slave s2(node, S, database, "");
+	Slave s1(node, R, database);
+	Slave s2(node, S, database);
 
 	// confirm, await next command
 	tcp_traits::confirm_await_command(node.port(), node.client());
