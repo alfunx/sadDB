@@ -8,7 +8,7 @@
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/lexical_cast.hpp>
 
-static int ADDRESS_ID_COUNTER = -1;
+static int ADDRESS_ID_COUNTER = 0;
 
 class Address
 {
