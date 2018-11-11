@@ -3,14 +3,16 @@
 #include <vector>
 
 #include "address.h"
+#include "node.h"
 #include "tcp_traits.h"
 
 namespace
 {
+	const static std::string ip_ = "localhost";
+	const static unsigned short port_ = 12980;
+
 	std::string program_name;
-	static const unsigned short main_port = 12000;
-	static const Address client_address("localhost", main_port);
-	AddressList servers;
+	Node node;
 }
 
 static void print_help()
@@ -21,6 +23,10 @@ static void print_help()
 int main(int argc, char* argv[])
 {
 	std::vector<std::string> args(argv, argv + argc);
+
+	// set client details
+	node = Node(Address().ip(ip_).port(port_));
+	std::cout << "client address: " << node << std::endl;
 
 	// first argument contains program name
 	program_name = args.front();
@@ -36,19 +42,19 @@ int main(int argc, char* argv[])
 	// insert server addresses
 	for (auto a : args)
 	{
-		servers.push_back(a);
+		node.add_server(Address(a));
 	}
 
 	// TODO remove
-	for (auto s : servers)
+	for (auto s : *node.servers())
 	{
 		std::cout << s << std::endl;
 	}
 
 	// append client address to list of server addresses
-	AddressList servers_and_client(servers);
-	servers_and_client.push_back(client_address);
+	AddressList servers_and_client(*node.servers());
+	servers_and_client.push_back(node);
 
 	// broadcast list of server addresses and client address
-	tcp_traits::broadcast_await_confirm(main_port, servers, servers_and_client);
+	tcp_traits::broadcast_await_confirm(node.port(), *node.servers(), servers_and_client);
 }

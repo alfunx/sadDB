@@ -40,22 +40,6 @@ public:
 		/* void */
 	}
 
-	Address(std::string ip, unsigned int port) :
-		ip_(ip),
-		service_(std::to_string(port)),
-		id_(++ADDRESS_ID_COUNTER)
-	{
-		/* void */
-	}
-
-	Address(std::string ip, std::string service) :
-		ip_(ip),
-		service_(service),
-		id_(++ADDRESS_ID_COUNTER)
-	{
-		/* void */
-	}
-
 	Address(const Address& address) :
 		ip_(address.ip()),
 		service_(address.service()),
@@ -79,22 +63,46 @@ public:
 		service_ = part[1];
 	}
 
-	std::string ip() const
+	virtual Address& ip(std::string ip)
+	{
+		ip_ = ip;
+		return *this;
+	}
+
+	virtual Address& service(std::string service)
+	{
+		service_ = service;
+		return *this;
+	}
+
+	virtual Address& port(unsigned short port)
+	{
+		service_ = std::to_string(port);
+		return *this;
+	}
+
+	virtual Address& id(unsigned int id)
+	{
+		id_ = id;
+		return *this;
+	}
+
+	virtual std::string ip() const
 	{
 		return ip_;
 	}
 
-	std::string service() const
+	virtual std::string service() const
 	{
 		return service_;
 	}
 
-	unsigned short port() const
+	virtual unsigned short port() const
 	{
 		return boost::lexical_cast<unsigned short>(service_);
 	}
 
-	unsigned int id() const
+	virtual unsigned int id() const
 	{
 		return id_;
 	}
