@@ -37,7 +37,7 @@ public:
 		return *this;
 	}
 
-	virtual Node& client(Address client)
+	virtual Node& client(const Address& client)
 	{
 		client_ = client;
 		return *this;
@@ -48,7 +48,7 @@ public:
 		return client_;
 	}
 
-	virtual Node& add_server(Address server)
+	virtual Node& add_server(const Address& server)
 	{
 		servers_.push_back(server);
 		return *this;
