@@ -14,7 +14,11 @@ int Master::broadcast(std::vector<std::pair<Address, int> > &r, std::vector<std:
     for (auto &elem : r)
     {
         r_all += elem.second;
-//        if (std::find(s.begin(), s.end(), elem.first.id()) != s.end()) r_local += 1;
+        if (std::find_if(s.begin(), s.end(), [&elem](const std::pair<Address, int>& element)
+        {return element.first.id() == elem.first.id();}) != s.end())
+		{
+        	r_local += 1;
+		}
         if (elem.first.id() != node_.id()) r_nodes += 1;
     }
     s_nodes = s.size();
