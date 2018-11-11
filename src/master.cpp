@@ -9,6 +9,7 @@ int broadcast_R_S() {
 int broadcast_S_R() {
     // TODO implement
     return 1;
+}
 
 Master::Master(Node node) : node_(node)
 {

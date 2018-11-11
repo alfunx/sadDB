@@ -6,8 +6,8 @@
 
 #include "node.h"
 #include "address.h"
+#include "enums.h"
 
-enum relation_type {R, S};
 
 class Master
 {
