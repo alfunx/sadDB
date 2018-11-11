@@ -4,8 +4,7 @@
 #include <map>
 
 #include "node.h"
-
-enum relation_type {R, S};
+#include "enums.h"
 
 class Slave
 {

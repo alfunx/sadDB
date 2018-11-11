@@ -2,20 +2,17 @@
 #define SADDB_MASTER_H
 
 #include <map>
+#include <vector>
 
 #include "node.h"
+#include "address.h"
+#include "enums.h"
+
 
 class Master
 {
-
+  std::map<int, std::vector<std::tuple<Address, int, relation_type> > > key_node_cost_type;
 	Node node_;
-
-	// Here we need a multimap Tr|s
-	// with a <int, struct tobedefined>
-
-	int broadcast_r_s();
-
-	int broadcast_s_r();
 
 public:
 
