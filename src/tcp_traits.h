@@ -24,9 +24,6 @@ struct tcp_traits
 		TCP_Server<bool> tcp_server(port, [&count](boost::shared_ptr<bool> p, ConnectionPtr c) {});
 		tcp_server.expected_quantity(count);
 		tcp_server.start();
-
-		// TODO remove
-		std::cout << "Received " << count << " confirmations." << std::endl;
 	}
 
 	template <typename T>
@@ -71,6 +68,50 @@ struct tcp_traits
 
 		// confirm recipience
 		tcp_traits::confirm(broadcaster);
+	}
+
+	template <typename T>
+	static void confirm_await_broadcast(unsigned short port, Address broadcaster, T& t)
+	{
+		boost::thread confirm_thread {
+			boost::bind(&tcp_traits::await_broadcast<T>, port, boost::ref(t))
+		};
+
+		tcp_traits::confirm(broadcaster);
+		confirm_thread.join();
+	}
+
+	template <typename A>
+	static void command_await_confirm(unsigned short port, A& recipients)
+	{
+		bool command = 0;
+
+		// wait for confirmations (in thread)
+		boost::thread confirm_thread {
+			boost::bind(&tcp_traits::await_confirm, port, recipients.size())
+		};
+
+		// send payload to recipients
+		for (auto r : recipients)
+		{
+			TCP_Client<bool> tcp_client(command, r.ip(), r.service());
+			tcp_client.start();
+		}
+
+		// join thread
+		confirm_thread.join();
+	}
+
+	static void confirm_await_command(unsigned short port, Address broadcaster)
+	{
+		bool command;
+
+		boost::thread confirm_thread {
+			boost::bind(&tcp_traits::await_broadcast<bool>, port, boost::ref(command))
+		};
+
+		tcp_traits::confirm(broadcaster);
+		confirm_thread.join();
 	}
 
 };
