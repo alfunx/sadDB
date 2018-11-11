@@ -3,19 +3,28 @@
 
 #include <map>
 
+#include "node.h"
+
 class Master
 {
-    // Here we need a multimap Tr|s
-    // with a <int, struct tobedefined>
 
-    int broadcast_r_s();
+	Node node_;
 
-    int broadcast_s_r();
+	// Here we need a multimap Tr|s
+	// with a <int, struct tobedefined>
+
+	int broadcast_r_s();
+
+	int broadcast_s_r();
 
 public:
-    void phase2();
 
-    void phase3();
+	Master(Node node);
+
+	void phase2();
+
+	void phase3();
+
 };
 
 #endif //SADDB_MASTER_H
