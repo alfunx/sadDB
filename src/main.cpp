@@ -1,40 +1,57 @@
 #include <iostream>
-#include <thread>
+#include <string>
+#include <vector>
 
-#include "slave.h"
+#include <boost/lexical_cast.hpp>
+
+#include "address.h"
+#include "tcp_traits.h"
+
+namespace
+{
+	std::string program_name;
+	static const unsigned short port_count = 6;
+	unsigned short main_port;
+	AddressList servers;
+	Address client_address;
+}
+
+static void print_help()
+{
+	std::cout << "usage: " << program_name << " [port]" << std::endl;
+}
 
 int main(int argc, char* argv[])
 {
-	std::cout << "Hello, sadDB!" << std::endl;
+	std::vector<std::string> args(argv, argv + argc);
 
-	// This should be filled when the program is started
-	const std::string experiment = "experiment1";
-	const std::string node_nr = "node1";
+	// first argument contains program name
+	program_name = args.front();
+	args.erase(args.begin());
 
-	Slave process_R(R, experiment, node_nr);
+	// require at least one argument
+	if (argc < 1)
+	{
+		print_help();
+		return 1;
+	}
 
-	Slave process_S(S, experiment, node_nr);
+	// set own port
+	main_port = boost::lexical_cast<unsigned short>(args.front());
 
-	/* This is the first phase*/
-	std::thread r1([&] (Slave * process) {process->phase1();}, &process_R);
-	std::thread s1([&] (Slave * process) {process->phase1();}, &process_S);
+	// wait for list of server addresses and client address
+	tcp_traits::await_broadcast(main_port, servers);
 
-	r1.join();
-	s1.join();
+	// extract client address
+	client_address = servers.back();
+	servers.pop_back();
 
-	// Send msg to client
-	/* End of first phase */
+	// confirm client
+	tcp_traits::confirm(client_address);
 
-	/* Second phase */
-    std::thread r2([&] (Slave * process) {process->phase2();}, &process_R);
-    std::thread s2([&] (Slave * process) {process->phase2();}, &process_S);
-
-    r2.join();
-    s2.join();
-
-	// Send msg to client
-	/* End second phase */
-
-	return 0;
-
+	// TODO remove
+	for (auto s : servers)
+	{
+		std::cout << s << ", id:" << s.id() << std::endl;
+	}
 }
