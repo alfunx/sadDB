@@ -1,5 +1,5 @@
-#ifndef CLIENT_H_
-#define CLIENT_H_
+#ifndef SADDB_TCP_CLIENT_H_
+#define SADDB_TCP_CLIENT_H_
 
 #include <iostream>
 #include <vector>
@@ -13,10 +13,8 @@ using boost::asio::io_service;
 using boost::asio::ip::tcp;
 
 template <typename T>
-class Client
+class TCP_Client
 {
-
-private:
 
 	io_service ios;
 	Connection conn;
@@ -24,7 +22,7 @@ private:
 
 public:
 
-	Client(T& object, const std::string& host, const std::string& service) :
+	TCP_Client(T& object, const std::string& host, const std::string& service) :
 		conn(ios),
 		object(object)
 	{
@@ -36,7 +34,7 @@ public:
 		// start an asynchronous connect operation
 		boost::asio::async_connect(conn.socket(),
 				endpoint_iterator,
-				boost::bind(&Client::handle_connect, this, boost::asio::placeholders::error));
+				boost::bind(&TCP_Client::handle_connect, this, boost::asio::placeholders::error));
 	}
 
 	void start()
@@ -58,7 +56,7 @@ private:
 		{
 			// successfully established connection, start writing
 			conn.async_write(object,
-					boost::bind(&Client::handle_write, this, boost::asio::placeholders::error));
+					boost::bind(&TCP_Client::handle_write, this, boost::asio::placeholders::error));
 		}
 		else
 		{
@@ -73,4 +71,4 @@ private:
 
 };
 
-#endif  // CLIENT_H_
+#endif  // SADDB_TCP_CLIENT_H_

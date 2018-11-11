@@ -1,5 +1,5 @@
-#ifndef CONNECTION_H_
-#define CONNECTION_H_
+#ifndef SADDB_CONNECTION_H_
+#define SADDB_CONNECTION_H_
 
 #include <iomanip>
 #include <string>
@@ -157,4 +157,4 @@ public:
 
 typedef boost::shared_ptr<Connection> ConnectionPtr;
 
-#endif  // CONNECTION_H_
+#endif  // SADDB_CONNECTION_H_

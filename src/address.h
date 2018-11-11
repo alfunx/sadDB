@@ -1,5 +1,5 @@
-#ifndef ADDRESS_H_
-#define ADDRESS_H_
+#ifndef SADDB_ADDRESS_H_
+#define SADDB_ADDRESS_H_
 
 #include <iostream>
 
@@ -103,4 +103,4 @@ public:
 
 typedef std::vector<Address> AddressList;
 
-#endif  // ADDRESS_H_
+#endif  // SADDB_ADDRESS_H_
