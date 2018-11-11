@@ -1,6 +1,5 @@
-
-
 #include "master.h"
+
 
 int broadcast_R_S() {
     // TODO implement
@@ -10,6 +9,10 @@ int broadcast_R_S() {
 int broadcast_S_R() {
     // TODO implement
     return 1;
+
+Master::Master(Node node) : node_(node)
+{
+	/* void */
 }
 
 void Master::phase2() {
@@ -71,3 +74,4 @@ void Master::phase3() {
         }
     }
 }
+

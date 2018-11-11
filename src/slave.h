@@ -3,23 +3,29 @@
 
 #include <map>
 
+#include "node.h"
+
 enum relation_type {R, S};
 
 class Slave
 {
-    std::string experiment;
-    std::string node_nr;
-    relation_type type;
-    std::multimap<int, std::string> relation;
+
+	Node node_;
+	std::string experiment;
+	std::string node_nr;
+	relation_type type;
+	std::multimap<int, std::string> relation;
 
 public:
-    Slave(relation_type t, std::string experiment, std::string node_nr);
 
-    void phase1();
+	Slave(Node node, relation_type t, std::string experiment, std::string node_nr);
 
-    void phase2();
+	void phase1();
 
-    void phase3();
+	void phase2();
+
+	void phase3();
+
 };
 
 #endif //SADDB_SLAVE_H

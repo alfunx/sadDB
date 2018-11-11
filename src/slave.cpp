@@ -23,8 +23,13 @@ void print(std::multimap<int, std::string> &m)
 }
 
 
-Slave::Slave(relation_type t, std::string e, std::string n) : type(t), experiment(e), node_nr(n) {
-
+Slave::Slave(Node node, relation_type t, std::string e, std::string n) :
+	node_(node),
+	type(t),
+	experiment(e),
+	node_nr(n)
+{
+	/* void */
 }
 
 void Slave::phase1() {
