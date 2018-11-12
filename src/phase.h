@@ -4,9 +4,8 @@
 #include <iostream>
 
 #include "node.h"
-#include "master.h"
-#include "slave.h"
 #include "tcp_traits.h"
+#include "track_join_data.h"
 
 class Phase
 {
@@ -17,14 +16,14 @@ protected:
 
 public:
 
-	Phase(Node node) :
+	Phase(Node& node) :
 		node_(node)
 	{
 		/* void */
 	}
 
-	virtual void execute(Master& t, Slave& r, Slave& s) =0;
-	virtual void terminate() =0;
+	virtual void execute(TJD& data) =0;
+	virtual void terminate(TJD& data) =0;
 
 	void confirm()
 	{
@@ -38,13 +37,13 @@ class RandomPhase : public Phase
 
 public:
 
-	RandomPhase(Node node) :
+	RandomPhase(Node& node) :
 		Phase(node)
 	{
 		/* void */
 	}
 
-	virtual void execute(Master& t, Slave& r, Slave& s)
+	virtual void execute(TJD& data)
 	{
 		std::cout << "Processing: Random Phase" << std::endl;
 		sleep((rand() % 6) + 1);
@@ -54,9 +53,9 @@ public:
 		tcp_traits::confirm_await_command(node_.port(), node_.client());
 	}
 
-	virtual void terminate()
+	virtual void terminate(TJD& data)
 	{
-
+		/* void */
 	}
 
 };

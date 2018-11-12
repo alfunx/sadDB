@@ -38,6 +38,17 @@ struct tcp_traits
 	}
 
 	template <typename A, typename T>
+	static void broadcast(unsigned short port, A& recipients, T& t)
+	{
+		// send payload to recipients
+		for (auto r : recipients)
+		{
+			TCP_Client<T> tcp_client(t, r.ip(), r.service());
+			tcp_client.start();
+		}
+	}
+
+	template <typename A, typename T>
 	static void broadcast_await_confirm(unsigned short port, A& recipients, T& t)
 	{
 		// wait for confirmations (in thread)
@@ -45,12 +56,11 @@ struct tcp_traits
 			boost::bind(&tcp_traits::await_confirm, port, recipients.size())
 		};
 
-		// send payload to recipients
-		for (auto r : recipients)
-		{
-			TCP_Client<T> tcp_client(t, r.ip(), r.service());
-			tcp_client.start();
-		}
+		// TODO remove
+		//sleep(1);
+
+		// broadcast
+		tcp_traits::broadcast(port, recipients, t);
 
 		// join thread
 		confirm_thread.join();
@@ -73,11 +83,18 @@ struct tcp_traits
 	template <typename T>
 	static void confirm_await_broadcast(unsigned short port, Address broadcaster, T& t)
 	{
+		// wait for broadcast (in thread)
 		boost::thread confirm_thread {
 			boost::bind(&tcp_traits::await_broadcast<T>, port, boost::ref(t))
 		};
 
+		// TODO remove
+		//sleep(1);
+
+		// confirm
 		tcp_traits::confirm(broadcaster);
+
+		// join thread
 		confirm_thread.join();
 	}
 
@@ -85,33 +102,13 @@ struct tcp_traits
 	static void command_await_confirm(unsigned short port, A& recipients)
 	{
 		bool command = 0;
-
-		// wait for confirmations (in thread)
-		boost::thread confirm_thread {
-			boost::bind(&tcp_traits::await_confirm, port, recipients.size())
-		};
-
-		// send payload to recipients
-		for (auto r : recipients)
-		{
-			TCP_Client<bool> tcp_client(command, r.ip(), r.service());
-			tcp_client.start();
-		}
-
-		// join thread
-		confirm_thread.join();
+		broadcast_await_confirm(port, recipients, command);
 	}
 
 	static void confirm_await_command(unsigned short port, Address broadcaster)
 	{
 		bool command;
-
-		boost::thread confirm_thread {
-			boost::bind(&tcp_traits::await_broadcast<bool>, port, boost::ref(command))
-		};
-
-		tcp_traits::confirm(broadcaster);
-		confirm_thread.join();
+		confirm_await_broadcast(port, broadcaster, command);
 	}
 
 };

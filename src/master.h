@@ -4,17 +4,25 @@
 #include <map>
 #include <vector>
 
-#include "node.h"
 #include "address.h"
 #include "enums.h"
+#include "node.h"
+#include "tcp_server.h"
 
+typedef std::tuple<int, unsigned int, int> KeyCost;
 
 class Master
 {
-  std::map<int, std::vector<std::tuple<Address, int, relation_type> > > key_node_cost_type;
+
+public:
+
+	std::map<int, std::vector<std::tuple<Address, int, relation_type> > > key_node_cost_type;
+	std::vector<KeyCost> key_cost;
 	Node node_;
 
 public:
+
+	TCP_Server<KeyCost>* tcp_server;
 
 	Master(Node node);
 

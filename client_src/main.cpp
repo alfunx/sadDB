@@ -25,7 +25,7 @@ static void execute_phase(unsigned int i)
 	std::cout << "Start: Phase " << i << std::endl;
 	tcp_traits::command_await_confirm(node.port(), *node.servers());
 	std::cout << "End:   Phase " << i << std::endl;
-	tcp_traits::command_await_confirm(node.port(), *node.servers());
+	// tcp_traits::command_await_confirm(node.port(), *node.servers());
 }
 
 int main(int argc, char* argv[])
@@ -78,6 +78,10 @@ int main(int argc, char* argv[])
 	execute_phase(2);
 	execute_phase(3);
 	execute_phase(4);
+
+	// TODO
+	bool command = 0;
+	tcp_traits::broadcast(node.port(), *node.servers(), command);
 
 	return 0;
 }

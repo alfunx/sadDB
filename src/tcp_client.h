@@ -37,6 +37,12 @@ public:
 				boost::bind(&TCP_Client::handle_connect, this, boost::asio::placeholders::error));
 	}
 
+	TCP_Client(T& object, const std::string& host, const unsigned int& port) :
+		TCP_Client(object, host, std::to_string(port))
+	{
+		/* void */
+	}
+
 	void start()
 	{
 		ios.run();
