@@ -77,6 +77,19 @@ public:
 		return database_;
 	}
 
+	virtual Address get_address(unsigned int id) const
+	{
+		for (auto a : *servers())
+		{
+			if (a.id() == id)
+			{
+				return a;
+			}
+		}
+
+		return Address();
+	}
+
 };
 
 #endif  // SADDB_NODE_H_
