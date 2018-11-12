@@ -17,6 +17,7 @@
 #include "phase.h"
 #include "phase_1.h"
 #include "phase_2.h"
+#include "phase_3.h"
 
 namespace
 {
@@ -101,12 +102,12 @@ int main(int argc, char* argv[])
 	execute_phase(p2, data);
 
 	// phase 3
-	RandomPhase p3(node);
+	Phase_3 p3(node);
 	execute_phase(p3, data);
 
-	// finalize
-	RandomPhase p4(node);
-	execute_phase(p4, data);
+	// // finalize
+	// RandomPhase p4(node);
+	// execute_phase(p4, data);
 
 	return 0;
 }

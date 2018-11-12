@@ -15,12 +15,12 @@ namespace phase2
 
 TCP_Server<KeyCostId>* tcp_server;
 
-std::vector<KeyCostId> key_cost_id;
+KeyCostMap key_cost_map;
 
-void master(Node& node, std::vector<KeyCostId>& kc)
+void master(Node& node, KeyCostMap& kc)
 {
 	TCP_Server<KeyCostId> t = TCP_Server<KeyCostId>(node.port() + 1, [&kc](boost::shared_ptr<KeyCostId> p, ConnectionPtr c) {
-		kc.push_back(*p);
+		kc[std::get<0>(*p)].push_back(*p);
 	});
 	tcp_server = &t;
 	tcp_server->start();
@@ -34,7 +34,8 @@ void slave(Node& node, relation_type type, Relation& rel)
 	// iterate over distinct key
 	for (auto it = rel.begin(), end = rel.end();
 			it != end;
-			it = rel.upper_bound(it->first)) {
+			it = rel.upper_bound(it->first))
+	{
 		KeyCostId t(it->first, node.id(), rel.count(it->first), type);
 
 		// TODO send x (key, count) to processT (hash(k) mod N)
@@ -80,7 +81,7 @@ public:
 		std::cout << "Processing: Phase 2" << std::endl;
 
 		boost::thread process_t {
-			boost::bind(&phase2::master, boost::ref(node_), boost::ref(phase2::key_cost_id))
+			boost::bind(&phase2::master, boost::ref(node_), boost::ref(phase2::key_cost_map))
 		};
 
 		boost::thread process_r {
@@ -99,20 +100,21 @@ public:
 
 	virtual void terminate(TJD& data)
 	{
+		phase2::tcp_server->stop();
+
 		// TODO remove
 		sleep(1);
 
-		phase2::tcp_server->stop();
-
 		// set permanent
-		data.key_cost_id = phase2::key_cost_id;
+		data.key_cost_map = phase2::key_cost_map;
 
 		// TODO remove
-		for (auto x : data.key_cost_id)
+		for (auto v : data.key_cost_map)
 		{
-			std::cout << std::get<0>(x) << ","
-				<< std::get<1>(x) << ","
-				<< std::get<2>(x) << std::endl;
+			for (auto e : v.second)
+				std::cout << std::get<0>(e) << ","
+					<< std::get<1>(e) << ","
+					<< std::get<2>(e) << std::endl;
 		}
 	}
 
