@@ -38,6 +38,17 @@ struct tcp_traits
 	}
 
 	template <typename A, typename T>
+	static void broadcast(unsigned short port, A& recipients, T& t)
+	{
+		// send payload to recipients
+		for (auto r : recipients)
+		{
+			TCP_Client<T> tcp_client(t, r.ip(), r.service());
+			tcp_client.start();
+		}
+	}
+
+	template <typename A, typename T>
 	static void broadcast_await_confirm(unsigned short port, A& recipients, T& t)
 	{
 		// wait for confirmations (in thread)
@@ -45,12 +56,8 @@ struct tcp_traits
 			boost::bind(&tcp_traits::await_confirm, port, recipients.size())
 		};
 
-		// send payload to recipients
-		for (auto r : recipients)
-		{
-			TCP_Client<T> tcp_client(t, r.ip(), r.service());
-			tcp_client.start();
-		}
+		// broadcast
+		tcp_traits::broadcast(port, recipients, t);
 
 		// join thread
 		confirm_thread.join();
