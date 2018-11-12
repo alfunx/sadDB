@@ -6,6 +6,9 @@
 #include "node.h"
 #include "enums.h"
 
+typedef std::multimap<int, std::string> Relation;
+typedef std::tuple<int, unsigned int, int> KeyCost;
+
 class Slave
 {
 
@@ -13,7 +16,7 @@ class Slave
 	std::string experiment;
 	std::string node_nr;
 	relation_type type;
-	std::multimap<int, std::string> relation;
+	Relation relation;
 
 public:
 

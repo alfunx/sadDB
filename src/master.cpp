@@ -1,9 +1,8 @@
 #include <algorithm>
 
 #include "master.h"
-#include "tcp_client.h"
 #include "serialize_tuple.h"
-
+#include "tcp_client.h"
 
 int Master::broadcast(std::vector<std::pair<Address, int> > &r, std::vector<std::pair<Address, int> > &s) {
     int r_all = 0, r_local = 0, r_nodes = 0, s_nodes = 0;
@@ -31,8 +30,25 @@ Master::Master(Node node) : node_(node)
 	/* void */
 }
 
-void Master::phase2() {
+void Master::phase2()
+{
+	// wait for incoming broadcast
+	std::vector<KeyCost> kc;
+	TCP_Server<KeyCost> t(node_.port() + 1, [&kc](boost::shared_ptr<KeyCost> p, ConnectionPtr c) {
+		kc.push_back(*p);
+	});
+	tcp_server = &t;
+	tcp_server->start();
 
+	key_cost = kc;
+
+	// TODO remove
+	for (auto x : kc)
+	{
+		std::cout << std::get<0>(x) << ","
+			<< std::get<1>(x) << ","
+			<< std::get<2>(x) << std::endl;
+	}
 }
 
 void Master::phase3() {

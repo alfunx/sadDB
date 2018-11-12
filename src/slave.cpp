@@ -6,22 +6,20 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/map.hpp>
 
+#include "serialize_tuple.h"
 #include "slave.h"
+#include "tcp_client.h"
 
-// Only for testing
-void print(std::multimap<int, std::string> &m)
+// TODO remove
+void print(Relation& relation)
 {
-    std::multimap<int, std::string>::iterator it1 = m.begin();
-    std::multimap<int, std::string>::iterator it2 = m.end();
-
-    for(; it1!=it2; ++it1)
-    {
-        std::cout<<"key = "<<(it1->first)<<"\t\t";
-        std::cout<<"value = "<<(it1->second)<<std::endl;
-    }
-    std::cout<<std::endl;
+	for(auto t : relation)
+	{
+		std::cout << "key = " << t.first << "\t\t"
+			<< "value = " << t.second << std::endl;
+	}
+	std::cout<<std::endl;
 }
-
 
 Slave::Slave(Node node, relation_type t, std::string e, std::string n) :
 	node_(node),
@@ -32,45 +30,70 @@ Slave::Slave(Node node, relation_type t, std::string e, std::string n) :
 	/* void */
 }
 
-void Slave::phase1() {
-    // Fill a multimap with relation data (either R or S)
-    std::string r_file = "../relations/";
-    r_file.append(experiment);
-    r_file.append("/").append(node_nr);
+void Slave::phase1()
+{
+	// read relations
+	std::string r_file = std::string("../relations/")
+		.append(experiment)
+		.append("/")
+		.append(std::to_string(node_.id()))
+		.append("/");
 
-    // We should fill two strings after run program with
-    // the correct path and name for the chosen experiment
-    // and also node number
-    switch (type)
-    {
-        case R : r_file.append("/R.txt");
-            break;
-        case S : r_file.append("/S.txt");
-            break;
-        default:
-            break;
-    }
-    std::ifstream ifs(r_file);
-    boost::archive::text_iarchive serial2(ifs);
-    serial2 >> relation;
+	// We should fill two strings after run program with the correct path
+	// and name for the chosen experiment and also node number.
+	switch (type)
+	{
+		case R:
+			r_file.append("R.txt");
+			break;
+		case S:
+			r_file.append("S.txt");
+			break;
+		default:
+			break;
+	}
 
-    print(relation);
+	std::ifstream ifs(r_file);
+	boost::archive::text_iarchive serial(ifs);
+	serial >> relation;
+
+	// TODO remove
+	print(relation);
 }
 
-void Slave::phase2() {
-    // Go through each distinct key
-    for( auto it = relation.begin(), end = relation.end();
-         it != end;
-         it = relation.upper_bound(it->first)
-            ) {
-        std::pair<int, int> x(it->first, relation.count(it->first));
-        // Send x (key, count) to processT (hash(k) mod N)
+void Slave::phase2()
+{
+	// iterate over distinct key
+	for(auto it = relation.begin(), end = relation.end();
+			it != end;
+			it = relation.upper_bound(it->first)) {
+		KeyCost t(it->first, node_.id(), relation.count(it->first));
 
-        // Only for testing
-        std::cout << type << " -- " << x.first << ": " << x.second << std::endl;
-    }
+		// TODO send x (key, count) to processT (hash(k) mod N)
+		unsigned int n = std::get<0>(t) % node_.servers()->size() + 1;
+		Address address;
+
+		for (auto a : *node_.servers())
+		{
+			if (a.id() == n)
+			{
+				address = a;
+				break;
+			}
+		}
+
+		// TODO remove
+		std::cout << type << " -- "
+			<< std::get<0>(t) << ":"
+			<< std::get<2>(t) << ", "
+			<< "to: " << address << std::endl;
+
+		TCP_Client<KeyCost> tcp_client(t, address.ip(), address.port() + 1);
+		tcp_client.start();
+	}
 }
 
-void Slave::phase3() {
+void Slave::phase3()
+{
 
 }
