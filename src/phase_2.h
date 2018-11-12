@@ -13,52 +13,42 @@
 namespace phase2
 {
 
-TCP_Server<KeyCostId>* tcp_server;
+TCP_Server<KeyCost>* tcp_server;
 
 KeyCostMap key_cost_map;
 
 void master(Node& node, KeyCostMap& kc)
 {
-	TCP_Server<KeyCostId> t = TCP_Server<KeyCostId>(node.port() + 1, [&kc](boost::shared_ptr<KeyCostId> p, ConnectionPtr c) {
+	TCP_Server<KeyCost> t = TCP_Server<KeyCost>(node.port() + 1,
+			[&kc](boost::shared_ptr<KeyCost> p, ConnectionPtr c) {
 		kc[std::get<0>(*p)].push_back(*p);
 	});
 	tcp_server = &t;
 	tcp_server->start();
 }
 
-void slave(Node& node, relation_type type, Relation& rel)
+void slave(Node& node, relation_type type, RelationMap& rel)
 {
-	// TODO remove
-	std::cout << "sizes: " << rel.size() << std::endl;
-
 	// iterate over distinct key
 	for (auto it = rel.begin(), end = rel.end();
 			it != end;
 			it = rel.upper_bound(it->first))
 	{
-		KeyCostId t(it->first, node.id(), rel.count(it->first), type);
+		KeyCost t(it->first, node.id(), type, rel.count(it->first));
 
 		// TODO send x (key, count) to processT (hash(k) mod N)
-		unsigned int n = std::get<0>(t) % node.servers()->size() + 1;
-		Address address;
-
-		for (auto a : *node.servers())
-		{
-			if (a.id() == n)
-			{
-				address = a;
-				break;
-			}
-		}
+		unsigned int id = it->first % node.servers()->size() + 1;
+		Address address = node.get_address(id);
 
 		// TODO remove
-		std::cout << type << " -- "
-			<< std::get<0>(t) << ":"
-			<< std::get<2>(t) << ", "
-			<< "rel:" << std::get<3>(t) << ", "
-			<< "to: " << address << std::endl;
+		std::cout << "-"
+			<< " type:" << std::get<2>(t)
+			<< " key:" << std::get<0>(t)
+			<< " id:" << std::get<1>(t)
+			<< " cost:" << std::get<3>(t)
+			<< " - to: " << address << std::endl;
 
-		TCP_Client<KeyCostId> tcp_client(t, address.ip(), address.port() + 1);
+		TCP_Client<KeyCost> tcp_client(t, address.ip(), address.port() + 1);
 		tcp_client.start();
 	}
 }
@@ -109,12 +99,14 @@ public:
 		data.key_cost_map = phase2::key_cost_map;
 
 		// TODO remove
-		for (auto v : data.key_cost_map)
+		for (auto kv : data.key_cost_map)
 		{
-			for (auto e : v.second)
-				std::cout << std::get<0>(e) << ","
-					<< std::get<1>(e) << ","
-					<< std::get<2>(e) << std::endl;
+			for (auto t : kv.second)
+				std::cout << "-"
+					<< " type:" << std::get<2>(t)
+					<< " key:" << std::get<0>(t)
+					<< " id:" << std::get<1>(t)
+					<< " cost:" << std::get<3>(t) << std::endl;
 		}
 	}
 

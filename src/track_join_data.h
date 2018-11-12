@@ -13,18 +13,21 @@ typedef int Key;
 typedef int Cost;
 typedef std::string Payload;
 
-typedef std::multimap<Key, Payload> Relation;
-typedef std::tuple<Key, Id, Cost, relation_type> KeyCostId;
-typedef std::map<Key, std::vector<KeyCostId>> KeyCostMap; // T_r|s
-typedef std::tuple<Key, Id, relation_type> KeyNodeService;
-typedef std::vector<std::pair<Key, Payload>> RelationVector;
-typedef std::vector<std::tuple<Key, Payload, Payload>> JoinedRelation;
+typedef std::pair<Key, Payload> Record;
+typedef std::tuple<Key, Payload, Payload> JoinedRecord;
+typedef std::tuple<Key, Id, relation_type> SendCommand;
+typedef std::tuple<Key, Id, relation_type, Cost> KeyCost;
+
+typedef std::multimap<Key, Payload> RelationMap;
+typedef std::vector<Record> Relation;
+typedef std::vector<JoinedRecord> JoinedRelation;
+typedef std::map<Key, std::vector<KeyCost>> KeyCostMap;
 
 struct TrackJoinData
 {
 	// phase 1
-	Relation rel_R; // T_r
-	Relation rel_S; // T_s
+	RelationMap rel_R; // T_r
+	RelationMap rel_S; // T_s
 
 	// phase 2
 	KeyCostMap key_cost_map; // T_r|s

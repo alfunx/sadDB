@@ -1,5 +1,5 @@
-#ifndef SADDB_ENUMS_H
-#define SADDB_ENUMS_H
+#ifndef SADDB_ENUMS_H_
+#define SADDB_ENUMS_H_
 
 enum relation_type
 {
@@ -7,4 +7,9 @@ enum relation_type
 	S
 };
 
-#endif // SADDB_ENUMS_H
+relation_type other_relation_type(relation_type type)
+{
+	return (relation_type)((type + 1) % 2);
+}
+
+#endif // SADDB_ENUMS_H_

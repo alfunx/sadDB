@@ -15,17 +15,17 @@ namespace phase1
 {
 
 // TODO remove
-void print(Relation& rel)
+void print(RelationMap& rel)
 {
 	for(auto t : rel)
 	{
-		std::cout << "key = " << t.first << "\t\t"
-			<< "value = " << t.second << std::endl;
+		std::cout << "key:" << std::get<0>(t)
+			<< " - value:" << std::get<1>(t) << std::endl;
 	}
-	std::cout<<std::endl;
+	std::cout << std::endl;
 }
 
-void slave(Node& node, relation_type type, Relation& rel)
+void slave(Node& node, relation_type type, RelationMap& rel)
 {
 	// read relations
 	std::string r_file = std::string("../relations/")
@@ -36,17 +36,10 @@ void slave(Node& node, relation_type type, Relation& rel)
 
 	// We should fill two strings after run program with the correct path
 	// and name for the chosen experiment and also node number.
-	switch (type)
-	{
-		case R:
-			r_file.append("R.txt");
-			break;
-		case S:
-			r_file.append("S.txt");
-			break;
-		default:
-			break;
-	}
+	if (type == R)
+		r_file.append("R.txt");
+	else if (type == S)
+		r_file.append("S.txt");
 
 	std::ifstream ifs(r_file);
 	boost::archive::text_iarchive serial(ifs);
@@ -70,8 +63,8 @@ public:
 	{
 		std::cout << "Processing: Phase 1" << std::endl;
 
-		Relation rel_R;
-		Relation rel_S;
+		RelationMap rel_R;
+		RelationMap rel_S;
 
 		boost::thread process_r {
 			boost::bind(&phase1::slave, boost::ref(node_), R, boost::ref(rel_R))
@@ -89,7 +82,9 @@ public:
 		data.rel_S = rel_S;
 
 		// TODO remove
+		std::cout << "R:" << std::endl;
 		phase1::print(data.rel_R);
+		std::cout << "S:" << std::endl;
 		phase1::print(data.rel_S);
 
 		tcp_traits::confirm_await_command(node_.port(), node_.client());

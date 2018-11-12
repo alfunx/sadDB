@@ -16,15 +16,15 @@ namespace phase3
 JoinedRelation rel_R;
 JoinedRelation rel_S;
 
-KeyCostMap key_cost_map;
+std::vector<TCP_Server<SendCommand>*> tcp_server_1;
+std::vector<TCP_Server<Relation>*> tcp_server_2;
 
-int broadcast_cost(Node& node,
-		std::vector<std::pair<Address, int>> &r,
-		std::vector<std::pair<Address, int>> &s)
+int broadcast_cost(const Node& node,
+		const std::vector<std::pair<Address, int>> &r,
+		const std::vector<std::pair<Address, int>> &s)
 {
 	int r_all = 0, r_local = 0, r_nodes = 0, s_nodes = 0;
 
-	// size of key_node_service tuples
 	// TODO use real value
 	int tuple_size = 1;
 
@@ -49,108 +49,130 @@ int broadcast_cost(Node& node,
 	return r_all * s_nodes - r_local + r_nodes * s_nodes * tuple_size;
 }
 
+void broadcast(const Node& node, const KeyCostMap::iterator it, const relation_type type)
+{
+	for (auto &src : it->second)
+	{
+		if (std::get<2>(src) != type)
+			continue;
+
+		for (auto &dst : it->second)
+		{
+			if (std::get<2>(dst) == type)
+				continue;
+
+			SendCommand command(it->first,
+					std::get<1>(dst),
+					other_relation_type(type));
+
+			std::cout << "master: to:" << std::get<1>(src)
+				<< " type:" << std::get<2>(src)
+				<< " port:" << node.get_address(std::get<1>(src)).port() + type + 2
+				<< std::endl;
+
+			TCP_Client<SendCommand> tcp_client(command,
+					node.get_address(std::get<1>(src)).ip(),
+					node.get_address(std::get<1>(src)).port() + type + 2);
+			tcp_client.start();
+		}
+	}
+}
+
 void master(Node& node, KeyCostMap& kc)
 {
-	for(auto it = kc.begin(), end = kc.end();
-			it != end;
-			it = kc.upper_bound(it->first)
-	   ) {
-		std::vector<std::pair<Address, int> > cost_R;
-		std::vector<std::pair<Address, int> > cost_S;
+	// TODO remove
+	sleep(1);
+
+	for(auto it = kc.begin(); it != kc.end(); ++it)
+	{
+		std::vector<std::pair<Address, int>> cost_R;
+		std::vector<std::pair<Address, int>> cost_S;
 
 		for (auto &tuple : it->second)
 		{
 			if (std::get<2>(tuple) == R)
 			{
-				cost_R.emplace_back(node.get_address(std::get<0>(tuple)), std::get<1>(tuple)/*multiply width R*/);
+				// TODO multiply width R
+				cost_R.emplace_back(node.get_address(std::get<1>(tuple)),
+						std::get<3>(tuple));
 			}
 			else
 			{
-				cost_S.emplace_back(node.get_address(std::get<0>(tuple)), std::get<1>(tuple)/*multiply width S*/);
+				// TODO multiply width S
+				cost_S.emplace_back(node.get_address(std::get<1>(tuple)),
+						std::get<3>(tuple));
 			}
 		}
 
-		if (phase3::broadcast_cost(node, cost_R, cost_S) < phase3::broadcast_cost(node, cost_S, cost_R))
+		if (broadcast_cost(node, cost_R, cost_S) <
+				broadcast_cost(node, cost_S, cost_R))
 		{
-			for (auto &tuple : it->second)
-			{
-				if (std::get<2>(tuple) == R)
-				{
-					for (auto &t : it->second)
-					{
-						if (std::get<2>(t) == S)
-						{
-							KeyNodeService key_node_service(it->first, node.get_address(std::get<0>(t)).id(), S);
-							TCP_Client<KeyNodeService> client(key_node_service, node.get_address(std::get<0>(tuple)).ip(), node.get_address(std::get<0>(tuple)).service());
-						}
-					}
-				}
-			}
+			std::cout << "master: send R to S" << std::endl;
+			broadcast(node, it, R);
 		}
 		else
 		{
-			for (auto &tuple : it->second)
-			{
-				if (std::get<2>(tuple) == S)
-				{
-					for (auto &t : it->second)
-					{
-						if (std::get<2>(t) == R)
-						{
-							KeyNodeService key_node_service(it->first, node.get_address(std::get<0>(t)).id(), R);
-							TCP_Client<KeyNodeService> client(key_node_service, node.get_address(std::get<0>(tuple)).ip(), node.get_address(std::get<0>(tuple)).service());
-						}
-					}
-				}
-			}
+			std::cout << "master: send S to R" << std::endl;
+			broadcast(node, it, S);
 		}
 	}
 }
 
-std::vector<TCP_Server<KeyNodeService>*> tcp_server_1;
-
-void slave_1(Node& node, relation_type type, Relation& rel)
+void slave_1(Node& node, relation_type type, RelationMap& rel)
 {
-	// TODO port
-	TCP_Server t = TCP_Server<KeyNodeService>(node.port() + type + 1, [&node, &rel](boost::shared_ptr<KeyNodeService> p, ConnectionPtr c) {
-		RelationVector to_send;
-		typedef std::multimap<int, std::string>::iterator MMAPIterator;
-		std::pair<MMAPIterator, MMAPIterator> range = rel.equal_range(std::get<0>(*p));
+	std::cout << "slave 1: type:" << type << " port:" << node.port() + type + 2 << std::endl;
+	TCP_Server t = TCP_Server<SendCommand>(node.port() + type + 2,
+			[&node, &type, &rel](boost::shared_ptr<SendCommand> p, ConnectionPtr c) {
+		Relation to_send;
+		typedef std::multimap<int, std::string>::iterator MultiMapIt;
+		std::pair<MultiMapIt, MultiMapIt> range = rel.equal_range(std::get<0>(*p));
 
-		for (MMAPIterator it = range.first; it != range.second; it++)
+		for (MultiMapIt it = range.first; it != range.second; ++it)
 		{
 			to_send.emplace_back(it->first, it->second);
 		}
 
-		TCP_Client<RelationVector> client(to_send, node.get_address(std::get<1>(*p)).ip(), node.get_address(std::get<2>(*p)).id());
+		std::cout << "slave 1: to:" << std::get<1>(*p)
+			<< " me:" << type
+			<< " type:" << std::get<2>(*p)
+			<< " port:" << node.get_address(std::get<1>(*p)).port() + std::get<2>(*p) + 4
+			<< std::endl;
+
+		TCP_Client<Relation> tcp_client(to_send,
+				node.get_address(std::get<1>(*p)).ip(),
+				node.get_address(std::get<1>(*p)).port() + std::get<2>(*p) + 4);
+		tcp_client.start();
 	});
 
 	tcp_server_1.push_back(&t);
-	tcp_server_1[type]->start();
+	t.start();
 }
 
-std::vector<TCP_Server<RelationVector>*> tcp_server_2;
-
-void slave_2(Node& node, relation_type type, Relation& rel, JoinedRelation& j_rel)
+void slave_2(Node& node, relation_type type, RelationMap& rel, JoinedRelation& j_rel)
 {
-	// TODO port
-	TCP_Server t = TCP_Server<RelationVector>(node.port() + type + 3, [&node, &type, &rel, &j_rel](boost::shared_ptr<RelationVector> p, ConnectionPtr c) {
+	std::cout << "slave 2: type:" << type << " port:" << node.port() + type + 4 << std::endl;
+	TCP_Server t = TCP_Server<Relation>(node.port() + type + 4,
+			[&node, &type, &rel, &j_rel](boost::shared_ptr<Relation> p, ConnectionPtr c) {
 		// for each vector sent by slave
-		typedef std::multimap<int, std::string>::iterator MMAPIterator;
-		std::pair<MMAPIterator, MMAPIterator> range = rel.equal_range((*p)[0].first);
+		typedef std::multimap<int, std::string>::iterator MultiMapIt;
+		std::pair<MultiMapIt, MultiMapIt> range = rel.equal_range((*p)[0].first);
+
 		for (auto &elem : *p)
 		{
-			for (MMAPIterator it = range.first; it != range.second; it++)
+			for (MultiMapIt it = range.first; it != range.second; ++it)
 			{
-				if (type == R) j_rel.emplace_back(elem.first, elem.second, it->second);
-				else j_rel.emplace_back(elem.first, it->second,  elem.second);
+				if (type == R)
+					j_rel.emplace_back(elem.first, elem.second, it->second);
+				else
+					j_rel.emplace_back(elem.first, it->second,  elem.second);
 			}
 		}
-		// todo commit
+
+		// TODO commit
 	});
 
 	tcp_server_2.push_back(&t);
-	tcp_server_2[type]->start();
+	t.start();
 }
 
 }
@@ -170,8 +192,12 @@ public:
 	{
 		std::cout << "Processing: Phase 3" << std::endl;
 
-		boost::thread process_t {
-			boost::bind(&phase3::master, boost::ref(node_), boost::ref(phase3::key_cost_map))
+		boost::thread process_r_2 {
+			boost::bind(&phase3::slave_2, boost::ref(node_), R, boost::ref(data.rel_R), boost::ref(phase3::rel_R))
+		};
+
+		boost::thread process_s_2 {
+			boost::bind(&phase3::slave_2, boost::ref(node_), S, boost::ref(data.rel_S), boost::ref(phase3::rel_S))
 		};
 
 		boost::thread process_r_1 {
@@ -182,12 +208,8 @@ public:
 			boost::bind(&phase3::slave_1, boost::ref(node_), S, boost::ref(data.rel_S))
 		};
 
-		boost::thread process_r_2 {
-			boost::bind(&phase3::slave_2, boost::ref(node_), R, boost::ref(data.rel_R), boost::ref(phase3::rel_R))
-		};
-
-		boost::thread process_s_2 {
-			boost::bind(&phase3::slave_2, boost::ref(node_), S, boost::ref(data.rel_S), boost::ref(phase3::rel_S))
+		boost::thread process_t {
+			boost::bind(&phase3::master, boost::ref(node_), boost::ref(data.key_cost_map))
 		};
 
 		process_t.join();
@@ -207,6 +229,7 @@ public:
 		sleep(1);
 
 		// TODO remove
+		std::cout << "- result: " << std::endl;
 		for (auto e : phase3::rel_R)
 		{
 			std::cout << std::get<0>(e) << ","

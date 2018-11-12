@@ -105,9 +105,9 @@ int main(int argc, char* argv[])
 	Phase_3 p3(node);
 	execute_phase(p3, data);
 
-	// // finalize
-	// RandomPhase p4(node);
-	// execute_phase(p4, data);
+	// finalize
+	RandomPhase p4(node);
+	execute_phase(p4, data);
 
 	return 0;
 }
