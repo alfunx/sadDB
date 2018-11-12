@@ -7,6 +7,7 @@
 #include <boost/serialization/map.hpp>
 
 #include "slave.h"
+#include "tcp_client.h"
 
 // Only for testing
 void print(std::multimap<int, std::string> &m)
@@ -54,6 +55,7 @@ void Slave::phase1() {
     boost::archive::text_iarchive serial2(ifs);
     serial2 >> relation;
 
+    // todo remove
     print(relation);
 }
 
@@ -72,5 +74,48 @@ void Slave::phase2() {
 }
 
 void Slave::phase3() {
+	// todo listen for tuples from master and slave separately
+//	std::tuple<int, int, relation_type> key_node_service(/*key*/1, /*id*/1, /*relation_type*/S);
+//	// for each tuple if sent by master
+//	std::vector<std::pair<int, std::string>> to_send;
+//	typedef std::multimap<int, std::string>::iterator MMAPIterator;
+//	std::pair<MMAPIterator, MMAPIterator> range = relation.equal_range(std::get<0>(key_node_service));
+//
+//	for (MMAPIterator it = range.first; it != range.second; it++)
+//	{
+//		to_send.emplace_back(it->first, it->second);
+//	}
+//	TCP_Client<std::vector<std::pair<int, std::string>>> client(to_send, node_.get_ip(std::get<1>(key_node_service)), node_.get_port(std::get<2>(key_node_service)));
+//
+
+
+}
+
+void Slave::handle_sent_by_slave(std::vector<std::pair<int, std::string>> received) {
+	// for each vector sent by slave
+	std::vector<std::tuple<int, std::string, std::string>> to_send;
+	typedef std::multimap<int, std::string>::iterator MMAPIterator;
+	std::pair<MMAPIterator, MMAPIterator> range = relation.equal_range(received[0].first);
+	for (auto &elem : received)
+	{
+		for (MMAPIterator it = range.first; it != range.second; it++)
+		{
+			if (type == R) to_send.emplace_back(elem.first, elem.second, it->second);
+			else to_send.emplace_back(elem.first, it->second,  elem.second);
+		}
+	}
+	// todo commit
+}
+
+void Slave::handle_sent_by_master(std::tuple<int, int, relation_type> key_node_service) {
+	std::vector<std::pair<int, std::string>> to_send;
+	typedef std::multimap<int, std::string>::iterator MMAPIterator;
+	std::pair<MMAPIterator, MMAPIterator> range = relation.equal_range(std::get<0>(key_node_service));
+
+	for (MMAPIterator it = range.first; it != range.second; it++)
+	{
+		to_send.emplace_back(it->first, it->second);
+	}
+	TCP_Client<std::vector<std::pair<int, std::string>>> client(to_send, node_.get_ip(std::get<1>(key_node_service)), node_.get_port(std::get<2>(key_node_service)));
 
 }
