@@ -8,6 +8,7 @@ class Node : public Address
 
 	AddressList servers_;
 	Address client_;
+	std::string database_;
 
 public:
 
@@ -63,6 +64,17 @@ public:
 	virtual const AddressList* servers() const
 	{
 		return &servers_;
+	}
+
+	virtual Node& database(const std::string database)
+	{
+		database_ = database;
+		return *this;
+	}
+
+	virtual std::string database() const
+	{
+		return database_;
 	}
 
 };
