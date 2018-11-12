@@ -57,7 +57,7 @@ struct tcp_traits
 		};
 
 		// TODO remove
-		//sleep(1);
+		sleep(1);
 
 		// broadcast
 		tcp_traits::broadcast(port, recipients, t);
@@ -89,7 +89,7 @@ struct tcp_traits
 		};
 
 		// TODO remove
-		//sleep(1);
+		sleep(1);
 
 		// confirm
 		tcp_traits::confirm(broadcaster);
