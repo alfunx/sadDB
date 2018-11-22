@@ -3,15 +3,19 @@
 
 #include <iostream>
 
-#include "enums.h"
 #include "node.h"
 #include "phase.h"
+#include "relation.h"
 #include "serialize_tuple.h"
 #include "tcp_traits.h"
 #include "track_join_data.h"
 
 namespace phase2
 {
+
+boost::thread process_t;
+boost::thread process_r;
+boost::thread process_s;
 
 TCP_Server<KeyCost>* tcp_server;
 
@@ -21,38 +25,32 @@ void master(Node& node, KeyCostMap& kc)
 {
 	TCP_Server<KeyCost> t = TCP_Server<KeyCost>(node.port() + 1,
 			[&kc](boost::shared_ptr<KeyCost> p, ConnectionPtr c) {
-		kc[std::get<0>(*p)].push_back(*p);
+		kc[p->key].push_back(*p);
 	});
 	tcp_server = &t;
 	tcp_server->start();
 }
 
-void slave(Node& node, relation_type type, RelationMap& rel)
+void slave(Node& node, Relation::Type type, Relation& rel)
 {
+	auto keys = rel.distinct_keys();
+
 	// iterate over distinct key
-	for (auto it = rel.begin(), end = rel.end();
-			it != end;
-			it = rel.upper_bound(it->first))
+	for (auto key : keys)
 	{
-		KeyCost t(it->first, node.id(), type, rel.count(it->first));
+		KeyCost cost(key, node.id(), type, rel.count_keys(key));
 
 		// TODO send x (key, count) to processT (hash(k) mod N)
-		unsigned int id = it->first % node.servers()->size() + 1;
+		unsigned int id = key % node.servers()->size() + 1;
 		Address address = node.get_address(id);
 
 		// TODO remove
-		std::cout << "-"
-			<< " type:" << std::get<2>(t)
-			<< " key:" << std::get<0>(t)
-			<< " id:" << std::get<1>(t)
-			<< " cost:" << std::get<3>(t)
+		std::cout << "- " << cost
 			<< " - to: " << address << std::endl;
 
-		TCP_Client<KeyCost> tcp_client(t, address.ip(), address.port() + 1);
+		TCP_Client<KeyCost> tcp_client(cost, address.ip(), address.port() + 1);
 		tcp_client.start();
 	}
-}
-
 }
 
 class Phase_2 : public Phase
@@ -70,18 +68,27 @@ public:
 	{
 		std::cout << "Processing: Phase 2" << std::endl;
 
-		boost::thread process_t {
-			boost::bind(&phase2::master, boost::ref(node_), boost::ref(phase2::key_cost_map))
+		process_t = boost::thread {
+			boost::bind(&master,
+					boost::ref(node_),
+					boost::ref(key_cost_map))
 		};
 
-		boost::thread process_r {
-			boost::bind(&phase2::slave, boost::ref(node_), R, boost::ref(data.rel_R))
+		process_r = boost::thread {
+			boost::bind(&slave,
+					boost::ref(node_),
+					Relation::Type::R,
+					boost::ref(data.rel_R))
 		};
 
-		boost::thread process_s {
-			boost::bind(&phase2::slave, boost::ref(node_), S, boost::ref(data.rel_S))
+		process_s = boost::thread {
+			boost::bind(&slave,
+					boost::ref(node_),
+					Relation::Type::S,
+					boost::ref(data.rel_S))
 		};
 
+		// wait for threads
 		process_r.join();
 		process_s.join();
 
@@ -90,26 +97,26 @@ public:
 
 	virtual void terminate(TJD& data)
 	{
-		phase2::tcp_server->stop();
+		tcp_server->stop();
 
-		// TODO remove
-		sleep(1);
+		// wait for thread
+		process_t.join();
 
 		// set permanent
-		data.key_cost_map = phase2::key_cost_map;
+		data.key_cost_map = key_cost_map;
 
 		// TODO remove
 		for (auto kv : data.key_cost_map)
 		{
 			for (auto t : kv.second)
-				std::cout << "-"
-					<< " type:" << std::get<2>(t)
-					<< " key:" << std::get<0>(t)
-					<< " id:" << std::get<1>(t)
-					<< " cost:" << std::get<3>(t) << std::endl;
+				std::cout << t << std::endl;
 		}
 	}
 
 };
+
+}
+
+using phase2::Phase_2;
 
 #endif  // SADDB_PHASE_2_H_

@@ -3,9 +3,9 @@
 
 #include <iostream>
 
-#include "enums.h"
 #include "node.h"
 #include "phase.h"
+#include "relation.h"
 #include "serialize_tuple.h"
 #include "tcp_traits.h"
 #include "track_join_data.h"
@@ -13,8 +13,14 @@
 namespace phase3
 {
 
-JoinedRelation rel_R;
-JoinedRelation rel_S;
+boost::thread process_r_2;
+boost::thread process_s_2;
+boost::thread process_r_1;
+boost::thread process_s_1;
+boost::thread process_t;
+
+Relation received_rel_R;
+Relation received_rel_S;
 
 std::vector<TCP_Server<SendCommand>*> tcp_server_1;
 std::vector<TCP_Server<Relation>*> tcp_server_2;
@@ -49,30 +55,28 @@ int broadcast_cost(const Node& node,
 	return r_all * s_nodes - r_local + r_nodes * s_nodes * tuple_size;
 }
 
-void broadcast(const Node& node, const KeyCostMap::iterator it, const relation_type type)
+void broadcast(const Node& node, const KeyCostMap::iterator it, const Relation::Type type)
 {
 	for (auto &src : it->second)
 	{
-		if (std::get<2>(src) != type)
+		if (src.type != type)
 			continue;
 
 		for (auto &dst : it->second)
 		{
-			if (std::get<2>(dst) == type)
+			if (dst.type == type)
 				continue;
 
-			SendCommand command(it->first,
-					std::get<1>(dst),
-					other_relation_type(type));
+			SendCommand command(it->first, dst.id);
 
-			std::cout << "master: to:" << std::get<1>(src)
-				<< " type:" << std::get<2>(src)
-				<< " port:" << node.get_address(std::get<1>(src)).port() + type + 2
+			std::cout << "master: to:" << src.id
+				<< " type:" << src.type
+				<< " port:" << node.get_address(src.id).port() + type + 2
 				<< std::endl;
 
 			TCP_Client<SendCommand> tcp_client(command,
-					node.get_address(std::get<1>(src)).ip(),
-					node.get_address(std::get<1>(src)).port() + type + 2);
+					node.get_address(src.id).ip(),
+					node.get_address(src.id).port() + type + 2);
 			tcp_client.start();
 		}
 	}
@@ -80,9 +84,6 @@ void broadcast(const Node& node, const KeyCostMap::iterator it, const relation_t
 
 void master(Node& node, KeyCostMap& kc)
 {
-	// TODO remove
-	sleep(1);
-
 	for(auto it = kc.begin(); it != kc.end(); ++it)
 	{
 		std::vector<std::pair<Address, int>> cost_R;
@@ -90,17 +91,17 @@ void master(Node& node, KeyCostMap& kc)
 
 		for (auto &tuple : it->second)
 		{
-			if (std::get<2>(tuple) == R)
+			if (tuple.type == Relation::Type::R)
 			{
 				// TODO multiply width R
-				cost_R.emplace_back(node.get_address(std::get<1>(tuple)),
-						std::get<3>(tuple));
+				cost_R.emplace_back(node.get_address(tuple.id),
+						tuple.cost);
 			}
 			else
 			{
 				// TODO multiply width S
-				cost_S.emplace_back(node.get_address(std::get<1>(tuple)),
-						std::get<3>(tuple));
+				cost_S.emplace_back(node.get_address(tuple.id),
+						tuple.cost);
 			}
 		}
 
@@ -108,39 +109,32 @@ void master(Node& node, KeyCostMap& kc)
 				broadcast_cost(node, cost_S, cost_R))
 		{
 			std::cout << "master: send R to S" << std::endl;
-			broadcast(node, it, R);
+			broadcast(node, it, Relation::Type::R);
 		}
 		else
 		{
 			std::cout << "master: send S to R" << std::endl;
-			broadcast(node, it, S);
+			broadcast(node, it, Relation::Type::S);
 		}
 	}
 }
 
-void slave_1(Node& node, relation_type type, RelationMap& rel)
+void slave_1(Node& node, Relation::Type type, Relation& rel)
 {
 	std::cout << "slave 1: type:" << type << " port:" << node.port() + type + 2 << std::endl;
 	TCP_Server t = TCP_Server<SendCommand>(node.port() + type + 2,
 			[&node, &type, &rel](boost::shared_ptr<SendCommand> p, ConnectionPtr c) {
-		Relation to_send;
-		typedef std::multimap<int, std::string>::iterator MultiMapIt;
-		std::pair<MultiMapIt, MultiMapIt> range = rel.equal_range(std::get<0>(*p));
+		Relation sel = rel.copy();
+		sel.select(p->key);
 
-		for (MultiMapIt it = range.first; it != range.second; ++it)
-		{
-			to_send.emplace_back(it->first, it->second);
-		}
-
-		std::cout << "slave 1: to:" << std::get<1>(*p)
-			<< " me:" << type
-			<< " type:" << std::get<2>(*p)
-			<< " port:" << node.get_address(std::get<1>(*p)).port() + std::get<2>(*p) + 4
+		std::cout << "slave 1: to:" << p->id
+			<< " type:" << type
+			<< " port:" << node.get_address(p->id).port() + Relation::other(type) + 4
 			<< std::endl;
 
-		TCP_Client<Relation> tcp_client(to_send,
-				node.get_address(std::get<1>(*p)).ip(),
-				node.get_address(std::get<1>(*p)).port() + std::get<2>(*p) + 4);
+		TCP_Client<Relation> tcp_client(sel,
+				node.get_address(p->id).ip(),
+				node.get_address(p->id).port() + Relation::other(type) + 4);
 		tcp_client.start();
 	});
 
@@ -148,33 +142,16 @@ void slave_1(Node& node, relation_type type, RelationMap& rel)
 	t.start();
 }
 
-void slave_2(Node& node, relation_type type, RelationMap& rel, JoinedRelation& j_rel)
+void slave_2(Node& node, Relation::Type type, Relation& rel, Relation& received)
 {
 	std::cout << "slave 2: type:" << type << " port:" << node.port() + type + 4 << std::endl;
 	TCP_Server t = TCP_Server<Relation>(node.port() + type + 4,
-			[&node, &type, &rel, &j_rel](boost::shared_ptr<Relation> p, ConnectionPtr c) {
-		// for each vector sent by slave
-		typedef std::multimap<int, std::string>::iterator MultiMapIt;
-		std::pair<MultiMapIt, MultiMapIt> range = rel.equal_range((*p)[0].first);
-
-		for (auto &elem : *p)
-		{
-			for (MultiMapIt it = range.first; it != range.second; ++it)
-			{
-				if (type == R)
-					j_rel.emplace_back(elem.first, elem.second, it->second);
-				else
-					j_rel.emplace_back(elem.first, it->second,  elem.second);
-			}
-		}
-
-		// TODO commit
+			[&node, &type, &rel, &received](boost::shared_ptr<Relation> p, ConnectionPtr c) {
+		received.union_all(*p);
 	});
 
 	tcp_server_2.push_back(&t);
 	t.start();
-}
-
 }
 
 class Phase_3 : public Phase
@@ -192,26 +169,43 @@ public:
 	{
 		std::cout << "Processing: Phase 3" << std::endl;
 
-		boost::thread process_r_2 {
-			boost::bind(&phase3::slave_2, boost::ref(node_), R, boost::ref(data.rel_R), boost::ref(phase3::rel_R))
+		process_r_2 = boost::thread {
+			boost::bind(&slave_2,
+					boost::ref(node_),
+					Relation::Type::R,
+					boost::ref(data.rel_R),
+					boost::ref(received_rel_S))
 		};
 
-		boost::thread process_s_2 {
-			boost::bind(&phase3::slave_2, boost::ref(node_), S, boost::ref(data.rel_S), boost::ref(phase3::rel_S))
+		process_s_2 = boost::thread {
+			boost::bind(&slave_2,
+					boost::ref(node_),
+					Relation::Type::S,
+					boost::ref(data.rel_S),
+					boost::ref(received_rel_R))
 		};
 
-		boost::thread process_r_1 {
-			boost::bind(&phase3::slave_1, boost::ref(node_), R, boost::ref(data.rel_R))
+		process_r_1 = boost::thread {
+			boost::bind(&slave_1,
+					boost::ref(node_),
+					Relation::Type::R,
+					boost::ref(data.rel_R))
 		};
 
-		boost::thread process_s_1 {
-			boost::bind(&phase3::slave_1, boost::ref(node_), S, boost::ref(data.rel_S))
+		process_s_1 = boost::thread {
+			boost::bind(&slave_1,
+					boost::ref(node_),
+					Relation::Type::S,
+					boost::ref(data.rel_S))
 		};
 
-		boost::thread process_t {
-			boost::bind(&phase3::master, boost::ref(node_), boost::ref(data.key_cost_map))
+		process_t = boost::thread {
+			boost::bind(&master,
+					boost::ref(node_),
+					boost::ref(data.key_cost_map))
 		};
 
+		// wait for thread
 		process_t.join();
 
 		tcp_traits::confirm_await_command(node_.port(), node_.client());
@@ -219,31 +213,33 @@ public:
 
 	virtual void terminate(TJD& data)
 	{
-		for (auto s : phase3::tcp_server_1)
+		for (auto s : tcp_server_1)
 			s->stop();
 
-		for (auto s : phase3::tcp_server_2)
+		for (auto s : tcp_server_2)
 			s->stop();
 
-		// TODO remove
-		sleep(1);
+		// wait for threads
+		process_r_2.join();
+		process_s_2.join();
+		process_r_1.join();
+		process_s_1.join();
+
+		auto result = data.rel_R.copy();
+		result.join(received_rel_S);
+		auto tmp = received_rel_R.copy();
+		tmp.join(data.rel_S);
+		result.union_all(tmp);
 
 		// TODO remove
 		std::cout << "- result: " << std::endl;
-		for (auto e : phase3::rel_R)
-		{
-			std::cout << std::get<0>(e) << ","
-				<< std::get<1>(e) << ","
-				<< std::get<2>(e) << std::endl;
-		}
-		for (auto e : phase3::rel_S)
-		{
-			std::cout << std::get<0>(e) << ","
-				<< std::get<1>(e) << ","
-				<< std::get<2>(e) << std::endl;
-		}
+		std::cout << result << std::endl;
 	}
 
 };
+
+}
+
+using phase3::Phase_3;
 
 #endif  // SADDB_PHASE_3_H_
