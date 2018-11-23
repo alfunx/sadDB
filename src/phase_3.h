@@ -27,7 +27,7 @@ public:
 
 	virtual void execute()
 	{
-		std::cout << "Processing: Phase 3" << std::endl;
+		std::cerr << "Processing: Phase 3" << std::endl;
 
 		process_r_2 = boost::thread {
 			boost::bind(&Slave::phase_3_1,
@@ -79,8 +79,7 @@ public:
 		result.union_all(tmp);
 
 		// print join results
-		std::cout << "\n>>> result:\n"
-			<< result << std::endl;
+		std::cout << result << std::flush;
 	}
 
 };

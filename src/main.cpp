@@ -67,12 +67,12 @@ int main(int argc, char* argv[])
 	node.client(servers.back());
 	servers.pop_back();
 	node.servers(servers).infer();
-	std::cout << "me: " << node << std::endl;
+	std::cerr << "me: " << node << std::endl;
 
 	// TODO remove
 	for (auto s : *node.servers())
 	{
-		std::cout << s << ", id:" << s.id() << std::endl;
+		std::cerr << s << ", id:" << s.id() << std::endl;
 	}
 
 	// initialize random number generator, include id in seed
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	std::string database;
 	tcp_traits::confirm_await_broadcast(node.port(), node.client(), database);
 	node.database(database);
-	std::cout << "database: " << database << std::endl;
+	std::cerr << "database: " << database << std::endl;
 
 	// initialize master and slaves
 	Master master(node);

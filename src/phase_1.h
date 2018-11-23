@@ -24,7 +24,7 @@ public:
 
 	virtual void execute()
 	{
-		std::cout << "Processing: Phase 1" << std::endl;
+		std::cerr << "Processing: Phase 1" << std::endl;
 
 		process_r = boost::thread {
 			boost::bind(&Slave::phase_1,
@@ -38,12 +38,6 @@ public:
 
 		process_r.join();
 		process_s.join();
-
-		// TODO remove
-		std::cout << "R:" << std::endl;
-		std::cout << slave_r.relation << std::endl;
-		std::cout << "S:" << std::endl;
-		std::cout << slave_s.relation << std::endl;
 
 		tcp_traits::confirm_await_command(node_.port(), node_.client());
 	}

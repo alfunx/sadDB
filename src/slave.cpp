@@ -42,7 +42,7 @@ void Slave::phase_2()
 		Address address = node.get_address(id);
 
 		// TODO remove
-		std::cout << "- " << cost
+		std::cerr << "- " << cost
 			<< " - to: " << address << std::endl;
 
 		TCP_Client<KeyCost> tcp_c(cost, address.ip(), address.port() + 1);
@@ -60,7 +60,7 @@ void Slave::phase_3_1()
 			[&rel, &n, &t](boost::shared_ptr<SendCommand> p, ConnectionPtr c) {
 		Relation sel = Relation::select(rel, p->key);
 
-		std::cout << "slave 1: to:" << p->id
+		std::cerr << "slave 1: to:" << p->id
 			<< " type:" << t
 			<< " port:" << n.get_address(p->id).port() + Relation::other(t) + 4
 			<< std::endl;

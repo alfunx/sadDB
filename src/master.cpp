@@ -96,7 +96,7 @@ void Master::broadcast(const KeyCostMap::iterator it, const Relation::Type t)
 
 			SendCommand command(it->first, dst.id);
 
-			std::cout << "master: to:" << src.id
+			std::cerr << "master: to:" << src.id
 				<< " type:" << src.type
 				<< " port:" << node.get_address(src.id).port() + t + 2
 				<< std::endl;

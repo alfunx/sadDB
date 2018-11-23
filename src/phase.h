@@ -55,9 +55,9 @@ public:
 
 	virtual void execute()
 	{
-		std::cout << "Processing: Random Phase" << std::endl;
+		std::cerr << "Processing: Random Phase" << std::endl;
 		sleep((rand() % 6) + 1);
-		std::cout << "Done." << std::endl;
+		std::cerr << "Done." << std::endl;
 
 		// confirm, await next command
 		tcp_traits::confirm_await_command(node_.port(), node_.client());

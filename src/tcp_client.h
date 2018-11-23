@@ -24,6 +24,8 @@ class TCP_Client
 	const std::string service;
 	tcp::resolver::iterator endpoint_iterator;
 
+	unsigned int retry = 1000;
+
 public:
 
 	TCP_Client(T& object, const std::string& host, const std::string& service) :
@@ -72,7 +74,15 @@ private:
 		}
 		else
 		{
-			std::cerr << e.message() << " - Retry..." << std::endl;
+			if (--retry > 0)
+			{
+				std::cerr << e.message() << " - Retry..." << std::endl;
+			}
+			else
+			{
+				std::cerr << e.message() << std::endl;
+				return;
+			}
 
 			// start an asynchronous connect operation
 			boost::asio::async_connect(conn.socket(),

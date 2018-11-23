@@ -25,7 +25,7 @@ public:
 
 	virtual void execute()
 	{
-		std::cout << "Processing: Phase 2" << std::endl;
+		std::cerr << "Processing: Phase 2" << std::endl;
 
 		process_t = boost::thread {
 			boost::bind(&Master::phase_2,
