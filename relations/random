@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+range=$((1 + RANDOM % 1000))
+
+for i in $(seq 0 $range); do
+    echo $((1 + RANDOM % 1000))
+    echo $(shuf -n1  /usr/share/dict/words)
+done
