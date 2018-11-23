@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "boost/serialization/map.hpp"
-#include "boost/lexical_cast.hpp"
+#include <boost/serialization/map.hpp>
+#include <boost/lexical_cast.hpp>
 
 #include "record.h"
 
@@ -24,15 +24,23 @@ public:
 	Relation(std::vector<Record> r);
 
 	Relation copy() const;
-	void join(const Relation& other);
-	void union_all(const Relation& other);
+	void insert(const Record& r);
+	void join(const Relation& a);
+	void union_all(const Relation& a);
 	void select(int k);
 	void select(const std::set<int>& k);
-	Relation copy_select(int k) const;
-	Relation copy_select(const std::set<int>& k) const;
 	unsigned int count_keys(int k) const;
 	unsigned int count() const;
 	std::set<int> distinct_keys() const;
+
+public:
+
+	static Relation join(const Relation& a, const Relation& b);
+	static Relation union_all(const Relation& a, const Relation& b);
+	static Relation select(const Relation& a, int k);
+	static Relation select(const Relation& a, const std::set<int>& k);
+
+public:
 
 	friend std::ostream& operator <<(std::ostream& os, Relation r);
 	friend std::istream& operator >>(std::istream& is, Relation& r);

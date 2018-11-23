@@ -20,16 +20,22 @@ class TCP_Client
 	Connection conn;
 	T& object;
 
+	const std::string host;
+	const std::string service;
+	tcp::resolver::iterator endpoint_iterator;
+
 public:
 
 	TCP_Client(T& object, const std::string& host, const std::string& service) :
 		conn(ios),
-		object(object)
+		object(object),
+		host(host),
+		service(service)
 	{
 		// resolve the host name into an IP address
 		tcp::resolver resolver(ios);
 		tcp::resolver::query query(host, service);
-		tcp::resolver::iterator endpoint_iterator = resolver.resolve(query);
+		endpoint_iterator = resolver.resolve(query);
 
 		// start an asynchronous connect operation
 		boost::asio::async_connect(conn.socket(),
@@ -66,7 +72,12 @@ private:
 		}
 		else
 		{
-			std::cerr << e.message() << std::endl;
+			std::cerr << e.message() << " - Retry..." << std::endl;
+
+			// start an asynchronous connect operation
+			boost::asio::async_connect(conn.socket(),
+					endpoint_iterator,
+					boost::bind(&TCP_Client::handle_connect, this, boost::asio::placeholders::error));
 		}
 	}
 

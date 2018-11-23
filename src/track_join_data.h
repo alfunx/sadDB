@@ -3,11 +3,7 @@
 
 #include <iostream>
 #include <map>
-#include <set>
 #include <vector>
-
-#include "boost/serialization/map.hpp"
-#include "boost/lexical_cast.hpp"
 
 #include "relation.h"
 
@@ -90,18 +86,5 @@ struct KeyCost : public SendCommand
 };
 
 typedef std::map<Key, std::vector<KeyCost>> KeyCostMap;
-
-struct TrackJoinData
-{
-
-	// phase 1
-	Relation rel_R; // T_r
-	Relation rel_S; // T_s
-
-	// phase 2
-	KeyCostMap key_cost_map; // T_r|s
-
-};
-typedef TrackJoinData TJD;
 
 #endif  // SADDB_TRACK_JOIN_DATA_H_

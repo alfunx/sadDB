@@ -23,28 +23,38 @@ Relation Relation::copy() const
 	return tmp;
 }
 
-void Relation::join(const Relation& other)
+void Relation::insert(const Record& r)
 {
-	select(other.distinct_keys());
+	records.push_back(r);
+}
+
+void Relation::join(const Relation& a)
+{
+	auto keys = distinct_keys();
+	auto keys_2 = a.distinct_keys();
+	keys.insert(keys_2.begin(), keys_2.end());
+
+	Relation tmp = Relation::select(a, keys);
+	select(keys);
 
 	for (auto it = records.begin(); it < records.end(); ++it)
 	{
-		for (const auto& r : other.records)
+		for (const auto& r : tmp.records)
 		{
 			if (it->key != r.key)
 				continue;
 
-			for (const auto& a : r.payload)
-				it->payload.push_back(a);
+			for (const auto& p : r.payload)
+				it->payload.push_back(p);
 		}
 	}
 }
 
-void Relation::union_all(const Relation& other)
+void Relation::union_all(const Relation& a)
 {
 	records.insert(records.end(),
-			other.records.begin(),
-			other.records.end());
+			a.records.begin(),
+			a.records.end());
 }
 
 void Relation::select(int k)
@@ -65,11 +75,51 @@ void Relation::select(const std::set<int>& k)
 	}
 }
 
-Relation Relation::copy_select(int k) const
+Relation Relation::join(const Relation& a, const Relation& b)
+{
+	auto keys = a.distinct_keys();
+	auto keys_2 = a.distinct_keys();
+	keys.insert(keys_2.begin(), keys_2.end());
+
+	Relation a1 = Relation::select(a, keys);
+	Relation b1 = Relation::select(b, keys);
+	Relation tmp;
+
+	for (const auto& r1 : a1.records)
+	{
+		for (const auto& r2 : b1.records)
+		{
+			if (r1.key != r2.key)
+				continue;
+
+			Record r;
+			r.key = r1.key;
+
+			for (const auto& p : r1.payload)
+				r.payload.push_back(p);
+
+			for (const auto& p : r2.payload)
+				r.payload.push_back(p);
+
+			tmp.insert(r);
+		}
+	}
+
+	return tmp;
+}
+
+Relation Relation::union_all(const Relation& a, const Relation& b)
+{
+	Relation tmp = a.copy();
+	tmp.union_all(b);
+	return tmp;
+}
+
+Relation Relation::select(const Relation& a, int k)
 {
 	Relation tmp;
 
-	for (auto r : records)
+	for (auto r : a.records)
 	{
 		if (r.key == k)
 			tmp.records.push_back(r);
@@ -78,13 +128,13 @@ Relation Relation::copy_select(int k) const
 	return tmp;
 }
 
-Relation Relation::copy_select(const std::set<int>& k) const
+Relation Relation::select(const Relation& a, const std::set<int>& k)
 {
 	Relation tmp;
 
-	for (auto r : records)
+	for (auto r : a.records)
 	{
-		if (k.find(r.key) == k.end())
+		if (k.find(r.key) != k.end())
 			tmp.records.push_back(r);
 	}
 
@@ -116,7 +166,7 @@ std::set<int> Relation::distinct_keys() const
 std::ostream& operator <<(std::ostream& os, Relation r)
 {
 	for (const auto& t : r.records)
-		os << t << std::endl;
+		os << t << '\n';
 
 	return os;
 }

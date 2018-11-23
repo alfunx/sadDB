@@ -29,8 +29,10 @@ set(sadDB_generator "sadDB_gen")
 # Server
 file(GLOB sadDB_SRC
     "src/main.cpp"
+    "src/master.cpp"
     "src/record.cpp"
     "src/relation.cpp"
+    "src/slave.cpp"
 )
 add_executable(${sadDB_server}
     ${sadDB_SRC}

@@ -1,87 +1,54 @@
 #ifndef SADDB_PHASE_1_H_
 #define SADDB_PHASE_1_H_
 
-#include <fstream>
 #include <iostream>
 
-#include "node.h"
 #include "phase.h"
-#include "relation.h"
-#include "serialize_tuple.h"
-#include "tcp_traits.h"
-#include "track_join_data.h"
 
 namespace phase1
 {
 
-void slave(Node& node, Relation::Type type, Relation& rel)
-{
-	// relations directory
-	std::string rel_dir = std::string("../relations/")
-		.append(node.database())
-		.append("/")
-		.append(std::to_string(node.id()))
-		.append("/");
-
-	if (type == Relation::Type::R)
-		rel_dir.append("R.txt");
-	else if (type == Relation::Type::S)
-		rel_dir.append("S.txt");
-
-	std::ifstream ifs(rel_dir);
-	boost::archive::text_iarchive serial(ifs);
-	serial >> rel;
-}
-
 class Phase_1 : public Phase
 {
 
+boost::thread process_r;
+boost::thread process_s;
+
 public:
 
-	Phase_1(Node& node) :
-		Phase(node)
+	Phase_1(Node& node, Master& master, Slave& slave_r, Slave& slave_s) :
+		Phase(node, master, slave_r, slave_s)
 	{
 		/* void */
 	}
 
-	virtual void execute(TJD& data)
+	virtual void execute()
 	{
 		std::cout << "Processing: Phase 1" << std::endl;
 
-		Relation rel_R;
-		Relation rel_S;
-
-		boost::thread process_r {
-			boost::bind(&slave,
-					boost::ref(node_),
-					Relation::Type::R,
-					boost::ref(rel_R))
+		process_r = boost::thread {
+			boost::bind(&Slave::phase_1,
+					&slave_r)
 		};
 
-		boost::thread process_s {
-			boost::bind(&slave,
-					boost::ref(node_),
-					Relation::Type::S,
-					boost::ref(rel_S))
+		process_s = boost::thread {
+			boost::bind(&Slave::phase_1,
+					&slave_s)
 		};
 
 		process_r.join();
 		process_s.join();
 
-		// set permanent
-		data.rel_R = rel_R;
-		data.rel_S = rel_S;
-
 		// TODO remove
 		std::cout << "R:" << std::endl;
-		std::cout << data.rel_R << std::endl;
+		std::cout << slave_r.relation << std::endl;
 		std::cout << "S:" << std::endl;
-		std::cout << data.rel_S << std::endl;
+		std::cout << slave_s.relation << std::endl;
 
 		tcp_traits::confirm_await_command(node_.port(), node_.client());
 	}
 
-	virtual void terminate(TJD& data)
+	virtual void terminate()
 	{
 		/* void */
 	}

@@ -5,8 +5,8 @@
 #include <string>
 #include <vector>
 
-#include "boost/serialization/map.hpp"
-#include "boost/lexical_cast.hpp"
+#include <boost/serialization/map.hpp>
+#include <boost/lexical_cast.hpp>
 
 typedef int Key;
 typedef std::string Payload;
