@@ -52,22 +52,18 @@ void Slave::phase_2()
 
 void Slave::phase_3_1()
 {
-	auto rel = relation;
-	auto n = node;
-	auto t = type;
-
 	TCP_Server tcp_s = TCP_Server<SendCommand>(node.port() + type + 2,
-			[&rel, &n, &t](boost::shared_ptr<SendCommand> p, ConnectionPtr c) {
-		Relation sel = Relation::select(rel, p->key);
+			[this](boost::shared_ptr<SendCommand> p, ConnectionPtr c) {
+		Relation sel = Relation::select(relation, p->key);
 
 		std::cerr << "slave 1: to:" << p->id
-			<< " type:" << t
-			<< " port:" << n.get_address(p->id).port() + Relation::other(t) + 4
+			<< " type:" << type
+			<< " port:" << node.get_address(p->id).port() + Relation::other(type) + 4
 			<< std::endl;
 
 		TCP_Client<Relation> tcp_c(sel,
-				n.get_address(p->id).ip(),
-				n.get_address(p->id).port() + Relation::other(t) + 4);
+				node.get_address(p->id).ip(),
+				node.get_address(p->id).port() + Relation::other(type) + 4);
 		tcp_c.start();
 	});
 
@@ -77,15 +73,11 @@ void Slave::phase_3_1()
 
 void Slave::phase_3_2()
 {
-	Relation rec;
-
 	TCP_Server tcp_s = TCP_Server<Relation>(node.port() + type + 4,
-			[&rec](boost::shared_ptr<Relation> p, ConnectionPtr c) {
-		rec.union_all(*p);
+			[this](boost::shared_ptr<Relation> p, ConnectionPtr c) {
+		received.union_all(*p);
 	});
 
 	tcp_server_3_2 = &tcp_s;
 	tcp_s.start();
-
-	received = rec;
 }
