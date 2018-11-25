@@ -41,10 +41,6 @@ void Slave::phase_2()
 		unsigned int id = key % node.servers()->size() + 1;
 		Address address = node.get_address(id);
 
-		// TODO remove
-		std::cerr << "- " << cost
-			<< " - to: " << address << std::endl;
-
 		TCP_Client<KeyCost> tcp_c(cost, address.ip(), address.port() + 1);
 		tcp_c.start();
 	}
@@ -55,11 +51,6 @@ void Slave::phase_3_1()
 	TCP_Server tcp_s = TCP_Server<SendCommand>(node.port() + type + 2,
 			[this](boost::shared_ptr<SendCommand> p, ConnectionPtr c) {
 		Relation sel = Relation::select(relation, p->key);
-
-		std::cerr << "slave 1: to:" << p->id
-			<< " type:" << type
-			<< " port:" << node.get_address(p->id).port() + Relation::other(type) + 4
-			<< std::endl;
 
 		TCP_Client<Relation> tcp_c(sel,
 				node.get_address(p->id).ip(),
