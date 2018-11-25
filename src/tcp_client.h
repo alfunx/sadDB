@@ -39,10 +39,36 @@ public:
 		tcp::resolver::query query(host, service);
 		endpoint_iterator = resolver.resolve(query);
 
-		// start an asynchronous connect operation
-		boost::asio::async_connect(conn.socket(),
-				endpoint_iterator,
-				boost::bind(&TCP_Client::handle_connect, this, boost::asio::placeholders::error));
+		bool error = true;
+		while (error) {
+			try
+			{
+				// start a synchronous connect operation
+				boost::asio::connect(conn.socket(), endpoint_iterator);
+
+				error = false;
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << "Exception 1: " << e.what() << "\n";
+			}
+		}
+
+		error = true;
+		while (error) {
+			try
+			{
+				// send object
+				conn.sync_write(object,
+						boost::bind(&TCP_Client::handle_write, this, boost::asio::placeholders::error));
+
+				error = false;
+			}
+			catch (std::exception& e)
+			{
+				std::cerr << "Exception 2: " << e.what() << "\n";
+			}
+		}
 	}
 
 	TCP_Client(T& object, const std::string& host, const unsigned int& port) :
@@ -53,43 +79,21 @@ public:
 
 	void start()
 	{
-		ios.run();
+		// ios.run();
+	}
+
+	void start(std::function<void()> f)
+	{
+		// ios.run();
+		f();
 	}
 
 	void stop()
 	{
-		ios.stop();
+		// ios.stop();
 	}
 
 private:
-
-	/// handle completion of a connect operation
-	void handle_connect(const boost::system::error_code& e)
-	{
-		if (!e)
-		{
-			// successfully established connection, start writing
-			conn.async_write(object,
-					boost::bind(&TCP_Client::handle_write, this, boost::asio::placeholders::error));
-		}
-		else
-		{
-			if (--retry > 0)
-			{
-				std::cerr << e.message() << " - Retry..." << std::endl;
-			}
-			else
-			{
-				std::cerr << e.message() << std::endl;
-				return;
-			}
-
-			// start an asynchronous connect operation
-			boost::asio::async_connect(conn.socket(),
-					endpoint_iterator,
-					boost::bind(&TCP_Client::handle_connect, this, boost::asio::placeholders::error));
-		}
-	}
 
 	void handle_write(const boost::system::error_code& e)
 	{
