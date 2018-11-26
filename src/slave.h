@@ -1,33 +1,34 @@
-#ifndef SADDB_SLAVE_H
-#define SADDB_SLAVE_H
-
-#include <map>
+#ifndef SADDB_SLAVE_H_
+#define SADDB_SLAVE_H_
 
 #include "node.h"
-#include "enums.h"
-
-typedef std::multimap<int, std::string> Relation;
-typedef std::tuple<int, unsigned int, int> KeyCost;
+#include "relation.h"
+#include "tcp_client.h"
+#include "tcp_server.h"
+#include "tcp_traits.h"
+#include "track_join_data.h"
 
 class Slave
 {
 
-	Node node_;
-	std::string experiment;
-	std::string node_nr;
-	relation_type type;
+public:
+
+	Node node;
+	Relation::Type type;
 	Relation relation;
+	Relation received;
+
+	TCP_Server<SendCommand>* tcp_server_3_1;
+	TCP_Server<Relation>* tcp_server_3_2;
 
 public:
 
-	Slave(Node node, relation_type t, std::string experiment, std::string node_nr);
-
-	void phase1();
-
-	void phase2();
-
-	void phase3();
+	Slave(Node& n, Relation::Type t);
+	void phase_1();
+	void phase_2();
+	void phase_3_1();
+	void phase_3_2();
 
 };
 
-#endif //SADDB_SLAVE_H
+#endif  // SADDB_SLAVE_H_

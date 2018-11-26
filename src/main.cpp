@@ -9,14 +9,17 @@
 
 #include "address.h"
 #include "node.h"
-// #include "master.h"
-// #include "slave.h"
+#include "relation.h"
 #include "tcp_traits.h"
 #include "track_join_data.h"
+
+#include "master.h"
+#include "slave.h"
 
 #include "phase.h"
 #include "phase_1.h"
 #include "phase_2.h"
+#include "phase_3.h"
 
 namespace
 {
@@ -29,10 +32,10 @@ static void print_help()
 	std::cout << "usage: " << program_name << " [port]" << std::endl;
 }
 
-static void execute_phase(Phase& p, TJD& data)
+static void execute_phase(Phase& p)
 {
-	p.execute(data);
-	p.terminate(data);
+	p.execute();
+	p.terminate();
 	// p.confirm();
 }
 
@@ -64,12 +67,12 @@ int main(int argc, char* argv[])
 	node.client(servers.back());
 	servers.pop_back();
 	node.servers(servers).infer();
-	std::cout << "me: " << node << std::endl;
+	std::cerr << "me: " << node << std::endl;
 
 	// TODO remove
 	for (auto s : *node.servers())
 	{
-		std::cout << s << ", id:" << s.id() << std::endl;
+		std::cerr << s << ", id:" << s.id() << std::endl;
 	}
 
 	// initialize random number generator, include id in seed
@@ -79,34 +82,27 @@ int main(int argc, char* argv[])
 	std::string database;
 	tcp_traits::confirm_await_broadcast(node.port(), node.client(), database);
 	node.database(database);
-	std::cout << "database: " << database << std::endl;
+	std::cerr << "database: " << database << std::endl;
 
-	// // initialize master and slaves
-	// Master m(node);
-	// Slave s1(node, R, database, "");
-	// Slave s2(node, S, database, "");
+	// initialize master and slaves
+	Master master(node);
+	Slave slave_r(node, Relation::Type::R);
+	Slave slave_s(node, Relation::Type::S);
 
 	// confirm, await next command
 	tcp_traits::confirm_await_command(node.port(), node.client());
 
-	// TODO
-	TJD data;
-
 	// phase 1
-	Phase_1 p1(node);
-	execute_phase(p1, data);
+	Phase_1 p1(node, master, slave_r, slave_s);
+	execute_phase(p1);
 
 	// phase 2
-	Phase_2 p2(node);
-	execute_phase(p2, data);
+	Phase_2 p2(node, master, slave_r, slave_s);
+	execute_phase(p2);
 
 	// phase 3
-	RandomPhase p3(node);
-	execute_phase(p3, data);
-
-	// finalize
-	RandomPhase p4(node);
-	execute_phase(p4, data);
+	Phase_3 p3(node, master, slave_r, slave_s);
+	execute_phase(p3);
 
 	return 0;
 }

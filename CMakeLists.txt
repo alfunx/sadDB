@@ -24,10 +24,15 @@ find_package(Boost
 # Executables
 set(sadDB_server "sadDB")
 set(sadDB_client "sadDB_client")
+set(sadDB_generator "sadDB_gen")
 
 # Server
 file(GLOB sadDB_SRC
-    "src/*.cpp"
+    "src/main.cpp"
+    "src/master.cpp"
+    "src/record.cpp"
+    "src/relation.cpp"
+    "src/slave.cpp"
 )
 add_executable(${sadDB_server}
     ${sadDB_SRC}
@@ -40,12 +45,27 @@ target_link_libraries(${sadDB_server}
 
 # Client
 file(GLOB sadDB_client_SRC
-    "client_src/*.cpp"
+    "client_src/main.cpp"
 )
 add_executable(${sadDB_client}
     ${sadDB_client_SRC}
 )
 target_link_libraries(${sadDB_client}
+    ${Boost_SYSTEM_LIBRARIES}
+    ${Boost_LIBRARIES}
+    ${CMAKE_THREAD_LIBS_INIT}
+)
+
+# Generator
+file(GLOB sadDB_generator_SRC
+    "generator_src/main.cpp"
+    "src/record.cpp"
+    "src/relation.cpp"
+)
+add_executable(${sadDB_generator}
+    ${sadDB_generator_SRC}
+)
+target_link_libraries(${sadDB_generator}
     ${Boost_SYSTEM_LIBRARIES}
     ${Boost_LIBRARIES}
     ${CMAKE_THREAD_LIBS_INIT}

@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+if [ "$#" -ne 6 ]; then
+    echo "usage: $0 <experiment> <node> <relation> <tuples> <min> <max>"
+    exit 1
+fi
+
+_random_relation() {
+    tuples=$1
+    min=$2
+    max=$3
+
+    for i in $(seq 1 $tuples); do
+
+        # key
+        echo $((RANDOM % $max + $min))
+
+        # payload
+        echo $(shuf -n1  /usr/share/dict/words)
+
+    done
+}
+
+experiment=$1
+node=$2
+relation=$3
+tuples=$4
+min=$5
+max=$6
+
+mkdir -p "$experiment"/"$node"
+
+# generate template
+_random_relation "$tuples" "$min" "$max" \
+    > "$experiment"/"$node"/"$relation".template.txt
+
+# generate serialized relation based on template
+../build/sadDB_gen \
+    "$experiment"/"$node"/"$relation".template.txt \
+    "$experiment"/"$node"/"$relation".txt

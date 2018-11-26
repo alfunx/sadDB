@@ -1,36 +1,90 @@
 #ifndef SADDB_TRACK_JOIN_DATA_H_
 #define SADDB_TRACK_JOIN_DATA_H_
 
+#include <iostream>
 #include <map>
 #include <vector>
 
-#include "boost/serialization/map.hpp"
-
-#include "enums.h"
+#include "relation.h"
 
 typedef unsigned int Id;
 typedef int Key;
 typedef int Cost;
 typedef std::string Payload;
 
-typedef std::multimap<Key, Payload> Relation;
-typedef std::tuple<Key, Id, Cost, relation_type> KeyCostId;
-typedef std::tuple<Id, Cost, relation_type> CostId;
-typedef std::multimap<Key, Id> send_to;
-typedef std::multimap<Key, Payload> send_tuples;
-
-struct TrackJoinData
+struct SendCommand
 {
-	// phase 1
-	Relation rel_R;
-	Relation rel_S;
 
-	// phase 2
-	std::vector<KeyCostId> key_cost_id; // T_r|s
+	Key key;
+	Id id;
 
-	// phase 3
-	std::multimap<Key, std::pair<Payload, Payload>> joined_rel;
+	SendCommand()
+	{
+		/* void */
+	}
+
+	SendCommand(Key k, Id i) :
+		key(k),
+		id(i)
+	{
+		/* void */
+	}
+
+	friend class boost::serialization::access;
+
+	template <typename Archive>
+	void serialize(Archive& ar, const unsigned int version)
+	{
+		ar & key;
+		ar & id;
+	}
+
+	friend std::ostream& operator <<(std::ostream& os, SendCommand r)
+	{
+		os << r.key << "," << r.id;
+		return os;
+	}
+
 };
-typedef TrackJoinData TJD;
+
+struct KeyCost : public SendCommand
+{
+
+	Relation::Type type;
+	Cost cost;
+
+	KeyCost()
+	{
+		/* void */
+	}
+
+	KeyCost(Key k, Id i, Relation::Type t, Cost c) :
+		SendCommand(k, i),
+		type(t),
+		cost(c)
+	{
+		/* void */
+	}
+
+	friend class boost::serialization::access;
+
+	template <typename Archive>
+	void serialize(Archive& ar, const unsigned int version)
+	{
+		ar & key;
+		ar & id;
+		ar & type;
+		ar & cost;
+	}
+
+	friend std::ostream& operator <<(std::ostream& os, KeyCost r)
+	{
+		os << r.key << "," << r.id << "," << r.type << "," << r.cost;
+		return os;
+	}
+
+};
+
+typedef std::map<Key, std::vector<KeyCost>> KeyCostMap;
 
 #endif  // SADDB_TRACK_JOIN_DATA_H_

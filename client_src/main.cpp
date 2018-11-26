@@ -77,7 +77,6 @@ int main(int argc, char* argv[])
 	execute_phase(1);
 	execute_phase(2);
 	execute_phase(3);
-	execute_phase(4);
 
 	// TODO
 	bool command = 0;

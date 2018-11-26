@@ -9,6 +9,7 @@ charset = utf-8
 
 [*.{cpp,cc,hpp,h}]
 indent_style = tab
+indent_size = 4
 
 [{CMakeLists.txt}]
 indent_style = space
