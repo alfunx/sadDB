@@ -18,11 +18,14 @@ public:
 
 	TCP_Server<KeyCost>* tcp_server_2;
 
+	unsigned int sent_messages_count = 0;
+
 public:
 
 	Master(Node& n);
 	void phase_2();
 	void phase_3();
+	int sent_messages();
 
 private:
 
