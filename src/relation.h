@@ -32,6 +32,7 @@ public:
 	void select(const std::set<int>& k);
 	unsigned int count_keys(int k) const;
 	unsigned int count() const;
+	unsigned int payload() const;
 	std::set<int> distinct_keys() const;
 
 public:

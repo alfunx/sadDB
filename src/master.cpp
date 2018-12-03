@@ -30,13 +30,11 @@ void Master::phase_3()
 		{
 			if (tuple.type == Relation::Type::R)
 			{
-				// TODO multiply width R
 				cost_R.emplace_back(node.get_address(tuple.id),
 						tuple.cost);
 			}
 			else
 			{
-				// TODO multiply width S
 				cost_S.emplace_back(node.get_address(tuple.id),
 						tuple.cost);
 			}
