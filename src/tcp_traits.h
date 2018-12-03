@@ -58,6 +58,7 @@ struct tcp_traits
 
 		// TODO remove
 		sleep(1);
+		std::cerr << "sleep(1)" << std::endl;
 
 		// broadcast
 		tcp_traits::broadcast(port, recipients, t);
@@ -90,6 +91,7 @@ struct tcp_traits
 
 		// TODO remove
 		sleep(1);
+		std::cerr << "sleep(1)" << std::endl;
 
 		// confirm
 		tcp_traits::confirm(broadcaster);
