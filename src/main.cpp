@@ -104,5 +104,9 @@ int main(int argc, char* argv[])
 	Phase_3 p3(node, master, slave_r, slave_s);
 	execute_phase(p3);
 
+	std::cerr << "Master messages sent: " << master.sent_messages() << std::endl;
+	std::cerr << "Slave R messages sent: " << slave_r.sent_messages() << std::endl;
+	std::cerr << "Slave S messages sent: " << slave_s.sent_messages() << std::endl;
+
 	return 0;
 }

@@ -84,7 +84,7 @@ public:
 
 	void start(std::function<void()> f)
 	{
-		// ios.run();
+		start();
 		f();
 	}
 

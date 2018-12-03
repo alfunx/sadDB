@@ -21,6 +21,8 @@ public:
 	TCP_Server<SendCommand>* tcp_server_3_1;
 	TCP_Server<Relation>* tcp_server_3_2;
 
+	unsigned int sent_messages_count = 0;
+
 public:
 
 	Slave(Node& n, Relation::Type t);
@@ -28,6 +30,7 @@ public:
 	void phase_2();
 	void phase_3_1();
 	void phase_3_2();
+	int sent_messages();
 
 };
 
