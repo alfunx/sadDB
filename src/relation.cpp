@@ -160,6 +160,19 @@ unsigned int Relation::count() const
 	return records.size();
 }
 
+unsigned int Relation::payload() const
+{
+	if (records.empty())
+		return 0;
+	else
+	{
+		unsigned int size;
+		for (const auto& s : records[0].payload)
+			size += s.size();
+		return size;
+	}
+}
+
 std::set<int> Relation::distinct_keys() const
 {
 	std::set<int> keys;

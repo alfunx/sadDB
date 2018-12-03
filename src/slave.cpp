@@ -35,7 +35,7 @@ void Slave::phase_2()
 	// iterate over distinct key
 	for (auto key : keys)
 	{
-		KeyCost cost(key, node.id(), type, relation.count_keys(key));
+		KeyCost cost(key, node.id(), type, relation.count_keys(key) * relation.payload());
 
 		// TODO send x (key, count) to processT (hash(k) mod N)
 		unsigned int id = key % node.servers()->size() + 1;
