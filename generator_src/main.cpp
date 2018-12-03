@@ -1,3 +1,4 @@
+#include <chrono>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -107,7 +108,8 @@ int main(int argc, char** argv)
 	}
 	else
 	{
-		std::default_random_engine generator;
+		unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
+		std::default_random_engine generator(seed);
 		std::uniform_int_distribution<int> distribution(min, max);
 
 		std::string payload;
