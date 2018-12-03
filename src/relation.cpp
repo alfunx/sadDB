@@ -23,9 +23,14 @@ Relation Relation::copy() const
 	return tmp;
 }
 
+void Relation::reserve(unsigned int count)
+{
+	records.reserve(count);
+}
+
 void Relation::insert(const Record& r)
 {
-	records.push_back(r);
+	records.emplace_back(r);
 }
 
 void Relation::join(const Relation& a)

@@ -24,6 +24,7 @@ public:
 	Relation(std::vector<Record> r);
 
 	Relation copy() const;
+	void reserve(unsigned int count);
 	void insert(const Record& r);
 	void join(const Relation& a);
 	void union_all(const Relation& a);
