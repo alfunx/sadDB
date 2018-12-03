@@ -104,9 +104,11 @@ int main(int argc, char* argv[])
 	Phase_3 p3(node, master, slave_r, slave_s);
 	execute_phase(p3);
 
-	std::cerr << "Master messages sent: " << master.sent_messages() << std::endl;
-	std::cerr << "Slave R messages sent: " << slave_r.sent_messages() << std::endl;
-	std::cerr << "Slave S messages sent: " << slave_s.sent_messages() << std::endl;
+	std::cerr << "Master phase 3 messages: " << master.phase_3_sent_messages_count << std::endl;
+	std::cerr << "Slave R phase 2 messages: " << slave_r.phase_2_sent_messages_count << std::endl;
+	std::cerr << "Slave R phase 3 messages: " << slave_r.phase_3_sent_messages_count << std::endl;
+	std::cerr << "Slave S phase 2 messages: " << slave_s.phase_2_sent_messages_count << std::endl;
+	std::cerr << "Slave S phase 3 messages: " << slave_s.phase_3_sent_messages_count << std::endl;
 
 	return 0;
 }

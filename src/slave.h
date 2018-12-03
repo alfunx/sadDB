@@ -21,7 +21,8 @@ public:
 	TCP_Server<SendCommand>* tcp_server_3_1;
 	TCP_Server<Relation>* tcp_server_3_2;
 
-	unsigned int sent_messages_count = 0;
+	unsigned int phase_2_sent_messages_count = 0;
+	unsigned int phase_3_sent_messages_count = 0;
 
 public:
 

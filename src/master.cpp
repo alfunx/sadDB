@@ -100,12 +100,7 @@ void Master::broadcast(const KeyCostMap::iterator it, const Relation::Type t)
 					node.get_address(src.id).ip(),
 					node.get_address(src.id).port() + t + 2);
 			tcp_c.start();
-			++sent_messages_count;
+			++phase_3_sent_messages_count;
 		}
 	}
-}
-
-int Master::sent_messages()
-{
-	return sent_messages_count;
 }
