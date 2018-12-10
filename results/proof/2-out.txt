@@ -1,0 +1,17 @@
+me: localhost:10020
+localhost:10010, id:1
+localhost:10020, id:2
+sleep(1)
+database: proof
+sleep(1)
+Processing: Phase 1
+sleep(1)
+Processing: Phase 2
+sleep(1)
+Processing: Phase 3
+sleep(1)
+Master phase 3 messages: 2
+Slave R phase 2 messages: 4
+Slave R phase 3 messages: 1
+Slave S phase 2 messages: 2
+Slave S phase 3 messages: 2

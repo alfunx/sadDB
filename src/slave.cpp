@@ -43,7 +43,9 @@ void Slave::phase_2()
 
 		TCP_Client<KeyCost> tcp_c(cost, address.ip(), address.port() + 1);
 		tcp_c.start();
-		++phase_2_sent_messages_count;
+
+		if (node.id() != address.id())
+			++phase_2_sent_messages_count;
 	}
 }
 
@@ -57,7 +59,9 @@ void Slave::phase_3_1()
 				node.get_address(p->id).ip(),
 				node.get_address(p->id).port() + Relation::other(type) + 4);
 		tcp_c.start();
-		++phase_3_sent_messages_count;
+
+		if (node.id() != p->id)
+			++phase_3_sent_messages_count;
 	});
 
 	tcp_server_3_1 = &tcp_s;

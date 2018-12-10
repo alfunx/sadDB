@@ -1,0 +1,6 @@
+1,a,x
+3,c,z
+8,i,xz
+8,i,yx
+7,h,xy
+7,g,xy
