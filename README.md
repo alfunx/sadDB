@@ -4,7 +4,7 @@ A super awesome distributed database system, that implements the distributed
 track-join.
 
 
-## Prepare
+## Build
 
 To prepare the build environment, run the following commands once:
 
@@ -12,8 +12,6 @@ To prepare the build environment, run the following commands once:
 cd build
 cmake ..
 ```
-
-## Build
 
 To build the project, run:
 
@@ -23,24 +21,56 @@ make
 ```
 
 
-## Run
+## Usage
 
-To start the server, run:
-
-```bash
-cd build
-./sadDB
-```
-
-And to start the client, execute:
+First start at least one server. Note that the server will use up to 10 ports,
+in sequence starting from the specified port.
 
 ```bash
 cd build
-./sadDB_client
+# ./sadDB [port]
+./sadDB 14010 &
+./sadDB 14020 &
 ```
 
+After starting the server(s), start the client to launch the track-join. The
+first parameter `<database>` refers to a setup of relations and nodes, and must be
+the name of a directory in `relations/`, e.g. `proof`. `<address>` must be in
+the form `ip:port` and must be specified for every server that should
+participate in the join.
 
-# Test
+```bash
+cd build
+# ./sadDB_client <database> <address> [<address>...]
+./sadDB_client proof localhost:14010 localhost:14020
+```
+
+The server outputs the result relation on `stdout` using the CSV format, and
+some debugging messages on `stderr`.
+
+
+### Database
+
+The databases are stored in the `relations/` directory. The directory structure
+is expected to be as follows:
+
+```
+relations
+└── proof
+    ├── 1
+    │   ├── R.txt
+    │   └── S.txt
+    └── 2
+        ├── R.txt
+        └── S.txt
+```
+
+As an example, consider the database named `proof`, which consists of two
+relations `R` and `S` which are horizontally fragmented and stored on two nodes.
+Note that the relations must be named `R` and `S`.
+
+
+### Concrete Example
 
 To test the track-join, use the `proof` dataset.
 
