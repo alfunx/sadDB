@@ -20,6 +20,8 @@ public:
 
 	unsigned int phase_3_sent_messages_count = 0;
 
+	std::vector<unsigned int> phase_3_sent_messages_sizes;
+
 public:
 
 	Master(Node& n);

@@ -1,5 +1,6 @@
 #include <fstream>
 
+#include "measurement_traits.h"
 #include "slave.h"
 
 Slave::Slave(Node& n, Relation::Type t) :
@@ -45,7 +46,10 @@ void Slave::phase_2()
 		tcp_c.start();
 
 		if (node.id() != address.id())
+		{
 			++phase_2_sent_messages_count;
+			phase_2_sent_messages_sizes.push_back(measurement_traits::size(cost));
+		}
 	}
 }
 
@@ -61,7 +65,10 @@ void Slave::phase_3_1()
 		tcp_c.start();
 
 		if (node.id() != p->id)
+		{
 			++phase_3_sent_messages_count;
+			phase_3_sent_messages_sizes.push_back(measurement_traits::size(sel));
+		}
 	});
 
 	tcp_server_3_1 = &tcp_s;

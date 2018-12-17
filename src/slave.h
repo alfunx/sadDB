@@ -24,6 +24,9 @@ public:
 	unsigned int phase_2_sent_messages_count = 0;
 	unsigned int phase_3_sent_messages_count = 0;
 
+	std::vector<unsigned int> phase_2_sent_messages_sizes;
+	std::vector<unsigned int> phase_3_sent_messages_sizes;
+
 public:
 
 	Slave(Node& n, Relation::Type t);
