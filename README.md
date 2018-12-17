@@ -70,6 +70,32 @@ relations `R` and `S` which are horizontally fragmented and stored on two nodes.
 Note that the relations must be named `R` and `S`.
 
 
+### Generate Databases
+
+Databases can be generated using the `sadDB_gen` program.
+
+```bash
+cd build
+# ./sadDB_gen [-i <input-file>] [-o <output-file>] \
+#     [-p <payload-size>] [-t <number-of-tuples>] [-r <min> <max>]
+./sadDB_gen -o R.txt -p 100 -t 2000 -r 1 50
+```
+
+The database generator either takes an input file in the following format:
+
+```
+1
+value for first key
+2
+value for second key
+```
+
+Or it generates the specified number of tuples with keys chosen uniformly at
+random in the given range. As payload, it will use a string of the specified
+length. The resulting relation will be stored as serialized relation, that can
+be used by the sadDB server.
+
+
 ### Concrete Example
 
 To test the track-join, use the `proof` dataset.
