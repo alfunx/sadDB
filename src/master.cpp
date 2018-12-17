@@ -1,4 +1,5 @@
 #include "master.h"
+#include "measurement_traits.h"
 
 Master::Master(Node& n) :
 	node(n)
@@ -100,7 +101,10 @@ void Master::broadcast(const KeyCostMap::iterator it, const Relation::Type t)
 			tcp_c.start();
 
 			if (node.id() != src.id)
+			{
 				++phase_3_sent_messages_count;
+				phase_3_sent_messages_sizes.push_back(measurement_traits::size(command));
+			}
 		}
 	}
 }

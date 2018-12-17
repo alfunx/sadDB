@@ -7,6 +7,7 @@
 #include <vector>
 
 #include <boost/lexical_cast.hpp>
+#include "boost/archive/text_iarchive.hpp"
 #include "boost/archive/text_oarchive.hpp"
 #include "boost/serialization/vector.hpp"
 #include "boost/tuple/tuple.hpp"
@@ -57,7 +58,20 @@ int main(int argc, char** argv)
 
 	for (int i = 0; i < args.size(); ++i)
 	{
-		if ("-i" == args[i])
+		if ("-P" == args[i])
+		{
+			input = args[++i];
+
+			std::ifstream ifs(input);
+			boost::archive::text_iarchive serial(ifs);
+			Relation relation;
+			serial >> relation;
+			std::cout << relation << std::endl;
+
+			return 0;
+		}
+
+		else if ("-i" == args[i])
 		{
 			input = args[++i];
 		}
