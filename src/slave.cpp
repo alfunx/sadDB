@@ -38,7 +38,6 @@ void Slave::phase_2()
 	{
 		KeyCost cost(key, node.id(), type, relation.count_keys(key) * relation.payload());
 
-		// TODO send x (key, count) to processT (hash(k) mod N)
 		unsigned int id = key % node.servers()->size() + 1;
 		Address address = node.get_address(id);
 

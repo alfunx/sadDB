@@ -31,18 +31,15 @@ void Master::phase_3()
 		{
 			if (tuple.type == Relation::Type::R)
 			{
-				cost_R.emplace_back(node.get_address(tuple.id),
-						tuple.cost);
+				cost_R.emplace_back(node.get_address(tuple.id), tuple.cost);
 			}
 			else
 			{
-				cost_S.emplace_back(node.get_address(tuple.id),
-						tuple.cost);
+				cost_S.emplace_back(node.get_address(tuple.id), tuple.cost);
 			}
 		}
 
-		if (broadcast_cost(cost_R, cost_S) <
-				broadcast_cost(cost_S, cost_R))
+		if (broadcast_cost(cost_R, cost_S) < broadcast_cost(cost_S, cost_R))
 		{
 			broadcast(it, Relation::Type::R);
 		}
@@ -69,7 +66,7 @@ unsigned int Master::broadcast_cost(const AddressCostList &r, const AddressCostL
 						return element.first.id() == elem.first.id();
 					}) != s.end())
 		{
-			r_local += 1;
+			r_local += elem.second;
 		}
 
 		if (elem.first.id() != node.id())

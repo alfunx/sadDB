@@ -29,29 +29,24 @@ public:
 	{
 		std::cerr << "Processing: Phase 3" << std::endl;
 
-		process_r_2 = boost::thread {
-			boost::bind(&Slave::phase_3_1,
-					&slave_r)
-		};
-
-		process_s_2 = boost::thread {
-			boost::bind(&Slave::phase_3_1,
-					&slave_s)
-		};
-
 		process_r_1 = boost::thread {
-			boost::bind(&Slave::phase_3_2,
-					&slave_r)
+			boost::bind(&Slave::phase_3_1, &slave_r)
 		};
 
 		process_s_1 = boost::thread {
-			boost::bind(&Slave::phase_3_2,
-					&slave_s)
+			boost::bind(&Slave::phase_3_1, &slave_s)
+		};
+
+		process_r_2 = boost::thread {
+			boost::bind(&Slave::phase_3_2, &slave_r)
+		};
+
+		process_s_2 = boost::thread {
+			boost::bind(&Slave::phase_3_2, &slave_s)
 		};
 
 		process_t = boost::thread {
-			boost::bind(&Master::phase_3,
-					&master)
+			boost::bind(&Master::phase_3, &master)
 		};
 
 		// wait for thread
